@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Oswald, Inter } from "next/font/google";
+import { SessionProvider } from "@/components/SessionProvider";
 import "./globals.css";
 
 const oswald = Oswald({
@@ -29,7 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ro" className={`${oswald.variable} ${inter.variable}`}>
       <body className="min-h-screen flex flex-col">
-        {children}
+        <SessionProvider>{children}</SessionProvider>
       </body>
     </html>
   );
