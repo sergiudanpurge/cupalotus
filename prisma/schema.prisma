@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -10,4 +5,60 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+model CategorieVarsta {
+  id        String   @id
+  nume      String
+  anNastere Int
+  echipe    Echipa[]
+  meciuri   Meci[]
+}
+
+model Echipa {
+  id          String          @id @default(cuid())
+  nume        String
+  grupa       String
+  categorieId String
+  categorie   CategorieVarsta @relation(fields: [categorieId], references: [id])
+
+  meciuriAcasa   Meci[] @relation("EchipaAcasa")
+  meciuriOaspete Meci[] @relation("EchipaOaspete")
+}
+
+model Meci {
+  id          String          @id @default(cuid())
+  categorieId String
+  categorie   CategorieVarsta @relation(fields: [categorieId], references: [id])
+
+  faza    String  // "grupa" | "eliminatorii"
+  grupa   String? // "A" | "B" | null (eliminatorii)
+  bracket Int?    // 1, 2, 3 (doar eliminatorii)
+  cod     String? // "SF1", "F1" etc
+
+  // Slot references pentru bracket (eliminatorii)
+  refSlotAcasaTip    String? // "rank" | "winner" | "loser"
+  refSlotAcasaVal    String? // ex: "A_1" sau "SF1"
+  refSlotOaspeteTip  String?
+  refSlotOaspeteVal  String?
+
+  echipaAcasaId   String?
+  echipaAcasa     Echipa? @relation("EchipaAcasa", fields: [echipaAcasaId], references: [id])
+  echipaOaspeteId String?
+  echipaOaspete   Echipa? @relation("EchipaOaspete", fields: [echipaOaspeteId], references: [id])
+
+  ziua    String  // "Vineri" | "Sambata" | "Duminica"
+  ora     String  // "16:15"
+  teren   String  // "Teren 1"
+
+  scorAcasa      Int?
+  scorOaspete    Int?
+  penaltyAcasa   Int?
+  penaltyOaspete Int?
+  jucat          Boolean @default(false)
+
+  marcatoriAcasa   String? // "7,7,10"
+  marcatoriOaspete String?
+
+  updatedAt DateTime @updatedAt
 }

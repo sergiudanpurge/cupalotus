@@ -7,8 +7,7 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"]!,
-    // DIRECT_URL e folosit de Prisma pentru migrații (bypass pgbouncer)
-    ...(process.env["DIRECT_URL"] ? { directUrl: process.env["DIRECT_URL"] } : {}),
+    // DIRECT_URL (port 5432) pentru migrate/db push — bypass pgbouncer
+    url: process.env["DIRECT_URL"] ?? process.env["DATABASE_URL"]!,
   },
 });
