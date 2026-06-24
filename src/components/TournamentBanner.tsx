@@ -7,7 +7,7 @@ import { useTranslation } from "@/contexts/LanguageContext";
 const BANNER_URLS: Record<string, string> = {
   ro: "https://res.cloudinary.com/dlemr26ee/image/upload/v1782214733/87b40a13d8dfe51a93bb6f64_wmbh07.png",
   en: "https://res.cloudinary.com/dlemr26ee/image/upload/v1782214289/ChatGPT_Image_23._Juni_2026_11_21_36_bca2om.png",
-  hu: "https://res.cloudinary.com/dlemr26ee/image/upload/v1782214289/ChatGPT_Image_23._Juni_2026_11_21_36_bca2om.png",
+  hu: "https://res.cloudinary.com/dlemr26ee/image/upload/v1782288729/ChatGPT_Image_24._Juni_2026_10_11_48_t8awio.png",
 };
 const BANNER_FALLBACK = "/cupa-lotus-poster.svg";
 
