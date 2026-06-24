@@ -119,7 +119,7 @@ export function CategoryPageContent({
         )}
         {tab === "program"    && (
           <ProgramView
-            meciuri={[...meciuriGrupa, ...meciuriEliminatorii]}
+            meciuri={meciuriGrupa}
             evenimenteSpeciale={evenimenteSpeciale}
           />
         )}
