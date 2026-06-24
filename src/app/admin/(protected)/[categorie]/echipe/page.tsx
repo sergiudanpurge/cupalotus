@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { EchipaEditRow } from "./EchipaEditRow";
+import { GrupaCard } from "./GrupaCard";
 
 export default async function EchipeAdminPage({
   params,
@@ -15,11 +15,16 @@ export default async function EchipeAdminPage({
 
   const echipe = await prisma.echipa.findMany({
     where: { categorieId: catId },
-    orderBy: [{ grupa: "asc" }, { nume: "asc" }],
+    orderBy: [{ grupa: "asc" }, { id: "asc" }],
   });
 
   const grupA = echipe.filter((e) => e.grupa === "A");
   const grupB = echipe.filter((e) => e.grupa === "B");
+
+  const [meciuriJucateA, meciuriJucateB] = await Promise.all([
+    prisma.meci.count({ where: { categorieId: catId, faza: "grupa", grupa: "A", jucat: true } }),
+    prisma.meci.count({ where: { categorieId: catId, faza: "grupa", grupa: "B", jucat: true } }),
+  ]);
 
   return (
     <div>
@@ -39,41 +44,34 @@ export default async function EchipeAdminPage({
         </h1>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <GrupaEditTable titlu="Grupa A" echipe={grupA} />
-        <GrupaEditTable titlu="Grupa B" echipe={grupB} />
-      </div>
-    </div>
-  );
-}
+      {(meciuriJucateA > 0 || meciuriJucateB > 0) && (
+        <div
+          className="mb-5 px-4 py-3 rounded-xl text-sm border"
+          style={{
+            background: "rgba(217,165,68,0.1)",
+            borderColor: "rgba(217,165,68,0.3)",
+            color: "var(--color-gold)",
+          }}
+        >
+          ⚠ Adăugarea/ștergerea echipelor este blocată pentru grupele cu meciuri jucate
+          {meciuriJucateA > 0 && ` (Grupa A: ${meciuriJucateA} meciuri)`}
+          {meciuriJucateB > 0 && ` (Grupa B: ${meciuriJucateB} meciuri)`}.
+        </div>
+      )}
 
-function GrupaEditTable({
-  titlu,
-  echipe,
-}: {
-  titlu: string;
-  echipe: { id: string; nume: string; grupa: string }[];
-}) {
-  return (
-    <div
-      className="rounded-xl border overflow-hidden"
-      style={{ background: "var(--color-surface)", borderColor: "var(--color-border)" }}
-    >
-      <div
-        className="px-4 py-3 border-b font-bold"
-        style={{
-          borderColor: "var(--color-border)",
-          fontFamily: "var(--font-oswald)",
-          color: "var(--color-cream)",
-          fontSize: "1.1rem",
-        }}
-      >
-        {titlu}
-      </div>
-      <div className="divide-y" style={{ borderColor: "var(--color-border)" }}>
-        {echipe.map((echipa) => (
-          <EchipaEditRow key={echipa.id} echipa={echipa} />
-        ))}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <GrupaCard
+          titlu="Grupa A"
+          echipe={grupA}
+          categorieId={catId}
+          grupa="A"
+        />
+        <GrupaCard
+          titlu="Grupa B"
+          echipe={grupB}
+          categorieId={catId}
+          grupa="B"
+        />
       </div>
     </div>
   );

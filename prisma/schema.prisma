@@ -13,6 +13,19 @@ model CategorieVarsta {
   anNastere Int
   echipe    Echipa[]
   meciuri   Meci[]
+  evenimenteSpeciale EvenimentSpecial[]
+}
+
+model EvenimentSpecial {
+  id          String          @id @default(cuid())
+  categorieId String
+  categorie   CategorieVarsta @relation(fields: [categorieId], references: [id])
+  tip         String          // "prezentare_echipe" | "festivitate_premiere"
+  titlu       String
+  ziua        String          // "Vineri" | "Sâmbătă" | "Duminică"
+  ora         String          // "10:00"
+  activ       Boolean         @default(true)
+  updatedAt   DateTime        @updatedAt
 }
 
 model Echipa {

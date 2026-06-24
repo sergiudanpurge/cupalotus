@@ -34,6 +34,7 @@ async function main() {
 
   // Curăță datele existente (ordinea contează — FK constraints)
   console.log('🗑  Șterg datele existente...');
+  await prisma.evenimentSpecial.deleteMany();
   await prisma.meci.deleteMany();
   await prisma.echipa.deleteMany();
   await prisma.categorieVarsta.deleteMany();
@@ -84,6 +85,26 @@ async function main() {
 
       console.log(`  ✓ ${cat.nume} Grupa ${grupa} — ${NR_ECHIPE} echipe, ${meciuriDeCreat.length} meciuri`);
     }
+
+    // Evenimente speciale per categorie (2 per categorie)
+    await prisma.evenimentSpecial.createMany({
+      data: [
+        {
+          categorieId: cat.id,
+          tip: 'prezentare_echipe',
+          titlu: 'Prezentarea Echipelor',
+          ziua: 'Vineri',
+          ora: '09:30',
+        },
+        {
+          categorieId: cat.id,
+          tip: 'festivitate_premiere',
+          titlu: 'Festivitatea de Premiere',
+          ziua: 'Duminică',
+          ora: '17:00',
+        },
+      ],
+    });
   }
 
   console.log(`\n✅ Seed complet!`);

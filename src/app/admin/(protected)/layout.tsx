@@ -6,7 +6,6 @@ import { AdminLogoutButton } from "./LogoutButton";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
-  const isLoginPage = false; // layout-ul nu se aplică pe /admin/login (are propriul layout)
 
   if (!session) {
     redirect("/admin/login");
@@ -23,7 +22,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           className="font-bold text-lg"
           style={{ fontFamily: "var(--font-oswald)", color: "var(--color-gold)" }}
         >
-          CUPA LOTUS — Admin
+          CUPA LOTUS 2027 — Admin
         </div>
 
         <nav className="flex gap-3 flex-1 overflow-x-auto">

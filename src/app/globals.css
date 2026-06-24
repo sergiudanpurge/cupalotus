@@ -25,3 +25,9 @@ body {
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--color-bg); }
 ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+
+@keyframes confetti-fall {
+  0%   { transform: translateY(0)    rotate(0deg);   opacity: 0.9; }
+  70%  { opacity: 0.6; }
+  100% { transform: translateY(80px) rotate(480deg); opacity: 0; }
+}

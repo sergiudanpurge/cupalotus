@@ -24,22 +24,31 @@ export interface StatisticaEchipa {
 }
 
 // ── 1. Round-robin (circle method) ──────────────────────────
-// 6 echipe → 5 runde × 3 meciuri, fiecare pereche se întâlnește exact o dată
+// Funcționează pentru orice N ≥ 2 (par sau impar).
+// N impar → adaugă o echipă fantomă pentru runda de bye; meciurile cu fantoma sunt omise.
+// N par   → N-1 runde × N/2 meciuri | N impar → N runde × (N-1)/2 meciuri
 
 export function genereazaRoundRobin(nrEchipe: number = 6): RondaMeci[][] {
-  const teams = Array.from({ length: nrEchipe }, (_, i) => i);
+  // Dacă N e impar, lucrăm cu N+1 (echipa fantomă la indexul N)
+  const n = nrEchipe % 2 === 0 ? nrEchipe : nrEchipe + 1;
+  const teams = Array.from({ length: n }, (_, i) => i);
   const runde: RondaMeci[][] = [];
 
-  for (let r = 0; r < nrEchipe - 1; r++) {
+  for (let r = 0; r < n - 1; r++) {
     const runda: RondaMeci[] = [];
-    for (let i = 0; i < nrEchipe / 2; i++) {
-      runda.push({ acasa: teams[i], oaspete: teams[nrEchipe - 1 - i] });
+    for (let i = 0; i < n / 2; i++) {
+      const acasa   = teams[i];
+      const oaspete = teams[n - 1 - i];
+      // Omitem slotul de bye (echipa fantomă are index ≥ nrEchipe)
+      if (acasa < nrEchipe && oaspete < nrEchipe) {
+        runda.push({ acasa, oaspete });
+      }
     }
     runde.push(runda);
 
     // Rotire: fixăm teams[0], rotim restul în sens invers acelor de ceasornic
-    const last = teams[nrEchipe - 1];
-    for (let i = nrEchipe - 1; i > 1; i--) teams[i] = teams[i - 1];
+    const last = teams[n - 1];
+    for (let i = n - 1; i > 1; i--) teams[i] = teams[i - 1];
     teams[1] = last;
   }
 
@@ -133,8 +142,11 @@ export function calculeazaClasament(
     // 3. Golaveraj
     if (b.golaveraj !== a.golaveraj) return b.golaveraj - a.golaveraj;
 
-    // 4. Goluri marcate (criteriu final — produce mereu ordine clară)
-    return b.gd - a.gd;
+    // 4. Goluri marcate
+    if (b.gd !== a.gd) return b.gd - a.gd;
+
+    // 5. Ordine alfabetică
+    return a.nume.localeCompare(b.nume, "ro");
   });
 }
 

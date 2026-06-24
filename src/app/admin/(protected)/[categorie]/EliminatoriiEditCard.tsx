@@ -1,0 +1,347 @@
+"use client";
+
+import { useState } from "react";
+import { salveazaScor, salveazaOraTeren, salveazaPenalty, reseteazaScor } from "@/app/actions/meci";
+
+type MeciElim = {
+  id: string;
+  cod: string | null;
+  bracket: number | null;
+  ora: string;
+  teren: string;
+  echipaAcasa:   { id: string; nume: string } | null;
+  echipaOaspete: { id: string; nume: string } | null;
+  scorAcasa:      number | null;
+  scorOaspete:    number | null;
+  penaltyAcasa:   number | null;
+  penaltyOaspete: number | null;
+  jucat:          boolean;
+  marcatoriAcasa:   string | null;
+  marcatoriOaspete: string | null;
+  // Slot labels pentru TBD
+  labelAcasa?:   string;
+  labelOaspete?: string;
+};
+
+function codLabel(cod: string | null, bracket: number | null): string {
+  if (!cod) return "Meci eliminatoriu";
+  if (cod.startsWith("SF")) return `Semifinală ${cod}`;
+  if (cod === "F1") return "Finală — Loc 1–2";
+  if (cod === "B1") return "Bronz — Loc 3–4";
+  if (cod.startsWith("F")) return `Finală — Loc ${(bracket! - 1) * 4 + 1}–${(bracket! - 1) * 4 + 2}`;
+  if (cod.startsWith("B")) return `Loc ${(bracket! - 1) * 4 + 3}–${(bracket! - 1) * 4 + 4}`;
+  return cod;
+}
+
+export function EliminatoriiEditCard({
+  meci,
+  labelAcasa,
+  labelOaspete,
+}: {
+  meci: MeciElim;
+  labelAcasa:   string;
+  labelOaspete: string;
+}) {
+  const [editScor,    setEditScor]    = useState(false);
+  const [editOrar,    setEditOrar]    = useState(false);
+  const [editPenalty, setEditPenalty] = useState(false);
+  const [loading,     setLoading]     = useState(false);
+  const [eroare,      setEroare]      = useState("");
+  const [success,     setSuccess]     = useState(false);
+
+  const [sA, setSA] = useState(String(meci.scorAcasa ?? ""));
+  const [sO, setSO] = useState(String(meci.scorOaspete ?? ""));
+  const [mA, setMA] = useState(meci.marcatoriAcasa ?? "");
+  const [mO, setMO] = useState(meci.marcatoriOaspete ?? "");
+  const [pA, setPA] = useState(String(meci.penaltyAcasa ?? ""));
+  const [pO, setPO] = useState(String(meci.penaltyOaspete ?? ""));
+  const [ora,   setOra]   = useState(meci.ora);
+  const [teren, setTeren] = useState(meci.teren);
+
+  function handleSetSA(v: string) { setSA(v); if (v === "0") setMA(""); }
+  function handleSetSO(v: string) { setSO(v); if (v === "0") setMO(""); }
+
+  function flash(ok: boolean, msg?: string) {
+    if (ok) { setSuccess(true); setTimeout(() => setSuccess(false), 2500); }
+    else setEroare(msg ?? "Eroare necunoscută.");
+    setLoading(false);
+  }
+
+  async function handleSalveazaScor() {
+    setEroare(""); setLoading(true);
+    const scA = parseInt(sA), scO = parseInt(sO);
+    if (isNaN(scA) || isNaN(scO) || scA < 0 || scO < 0) {
+      return flash(false, "Scorul trebuie să fie un număr pozitiv.");
+    }
+    const res = await salveazaScor(meci.id, scA, scO, mA, mO);
+    flash(res.ok, res.ok ? undefined : res.eroare);
+    if (res.ok) setEditScor(false);
+  }
+
+  async function handleSalveazaPenalty() {
+    setEroare(""); setLoading(true);
+    const pAn = parseInt(pA), pOn = parseInt(pO);
+    if (isNaN(pAn) || isNaN(pOn) || pAn < 0 || pOn < 0) {
+      return flash(false, "Scorurile din penalty trebuie să fie numere pozitive.");
+    }
+    const res = await salveazaPenalty(meci.id, pAn, pOn);
+    flash(res.ok, res.ok ? undefined : res.eroare);
+    if (res.ok) setEditPenalty(false);
+  }
+
+  async function handleReset() {
+    if (!confirm("Resetezi scorul acestui meci? Meciurile dependente vor pierde echipele.")) return;
+    setLoading(true);
+    const res = await reseteazaScor(meci.id);
+    flash(res.ok, res.ok ? undefined : res.eroare);
+    if (res.ok) { setSA(""); setSO(""); setMA(""); setMO(""); setPA(""); setPO(""); setEditScor(false); setEditPenalty(false); }
+  }
+
+  async function handleSalveazaOrar() {
+    setEroare(""); setLoading(true);
+    const res = await salveazaOraTeren(meci.id, ora, teren);
+    flash(res.ok, res.ok ? undefined : res.eroare);
+    if (res.ok) setEditOrar(false);
+  }
+
+  const jucat = meci.jucat && meci.scorAcasa != null;
+  const egalitate = jucat && meci.scorAcasa === meci.scorOaspete;
+  const hasPenalty = jucat && meci.penaltyAcasa != null && meci.penaltyOaspete != null;
+  const tbdAcasa   = !meci.echipaAcasa;
+  const tbdOaspete = !meci.echipaOaspete;
+  const canEdit    = !tbdAcasa && !tbdOaspete;
+
+  const numeAcasa   = meci.echipaAcasa?.nume   ?? labelAcasa;
+  const numeOaspete = meci.echipaOaspete?.nume ?? labelOaspete;
+
+  return (
+    <div
+      className="rounded-xl border overflow-hidden"
+      style={{
+        background: "var(--color-surface)",
+        borderColor: jucat ? "rgba(74,222,128,0.2)" : "var(--color-border)",
+      }}
+    >
+      {/* Linia principală */}
+      <div className="px-4 py-3">
+        {/* Meta */}
+        <div className="flex items-center gap-2 mb-2 flex-wrap">
+          <span
+            className="text-xs font-bold px-2 py-0.5 rounded"
+            style={{ background: "var(--color-gold)", color: "var(--color-bg)", fontFamily: "var(--font-oswald)" }}
+          >
+            {codLabel(meci.cod, meci.bracket)}
+          </span>
+          <span className="text-xs font-medium" style={{ color: "var(--color-gold)", fontFamily: "var(--font-oswald)" }}>{meci.ora}</span>
+          <span className="text-xs" style={{ color: "var(--color-cream-muted)" }}>· {meci.teren}</span>
+          {jucat && (
+            <span className="text-xs px-2 py-0.5 rounded font-medium" style={{ background: "rgba(26,71,49,0.5)", color: "var(--color-green-rank-text)" }}>
+              ✓ Jucat
+            </span>
+          )}
+          {hasPenalty && (
+            <span className="text-xs px-2 py-0.5 rounded" style={{ background: "var(--color-surface-2)", color: "var(--color-cream-muted)" }}>
+              pen. {meci.penaltyAcasa}–{meci.penaltyOaspete}
+            </span>
+          )}
+          {success && <span className="text-xs ml-auto" style={{ color: "var(--color-green-rank-text)" }}>✓ Salvat</span>}
+        </div>
+
+        {/* Echipe + scor */}
+        <div className="flex items-center gap-3">
+          <span
+            className="flex-1 text-sm font-medium truncate"
+            style={{ color: tbdAcasa ? "var(--color-cream-muted)" : "var(--color-cream)", fontStyle: tbdAcasa ? "italic" : "normal" }}
+          >
+            {numeAcasa}
+          </span>
+          <span
+            className="text-lg font-bold px-3 py-0.5 rounded tabular-nums"
+            style={{
+              fontFamily: "var(--font-oswald)",
+              background: "var(--color-surface-2)",
+              color: jucat ? "var(--color-cream)" : "var(--color-cream-muted)",
+              minWidth: "4rem", textAlign: "center",
+            }}
+          >
+            {jucat ? `${meci.scorAcasa} – ${meci.scorOaspete}` : "– – –"}
+          </span>
+          <span
+            className="flex-1 text-sm font-medium truncate text-right"
+            style={{ color: tbdOaspete ? "var(--color-cream-muted)" : "var(--color-cream)", fontStyle: tbdOaspete ? "italic" : "normal" }}
+          >
+            {numeOaspete}
+          </span>
+        </div>
+
+        {/* Acțiuni */}
+        <div className="flex gap-2 mt-3 flex-wrap">
+          {canEdit && (
+            <button
+              onClick={() => { setEditScor(!editScor); setEditOrar(false); setEditPenalty(false); setEroare(""); }}
+              className="text-xs px-3 py-1.5 rounded-lg border transition-colors hover:border-[var(--color-gold)]"
+              style={{ borderColor: "var(--color-border)", color: "var(--color-cream-muted)" }}
+            >
+              {editScor ? "✕ Închide" : "✎ Scor"}
+            </button>
+          )}
+          {jucat && egalitate && !hasPenalty && canEdit && (
+            <button
+              onClick={() => { setEditPenalty(!editPenalty); setEditScor(false); setEditOrar(false); setEroare(""); }}
+              className="text-xs px-3 py-1.5 rounded-lg border transition-colors"
+              style={{ borderColor: "var(--color-gold)", color: "var(--color-gold)" }}
+            >
+              {editPenalty ? "✕ Închide" : "⚽ Penalty-uri"}
+            </button>
+          )}
+          <button
+            onClick={() => { setEditOrar(!editOrar); setEditScor(false); setEditPenalty(false); setEroare(""); }}
+            className="text-xs px-3 py-1.5 rounded-lg border transition-colors hover:border-[var(--color-gold)]"
+            style={{ borderColor: "var(--color-border)", color: "var(--color-cream-muted)" }}
+          >
+            {editOrar ? "✕ Închide" : "⏱ Orar"}
+          </button>
+          {jucat && (
+            <button
+              onClick={handleReset}
+              disabled={loading}
+              className="text-xs px-3 py-1.5 rounded-lg border transition-colors hover:border-[var(--color-red)] disabled:opacity-50 ml-auto"
+              style={{ borderColor: "var(--color-border)", color: "var(--color-red)" }}
+            >
+              ↺ Reset
+            </button>
+          )}
+        </div>
+      </div>
+
+      {eroare && (
+        <div className="mx-4 mb-3 px-3 py-2 rounded-lg text-xs" style={{ background: "rgba(179,64,47,0.15)", color: "var(--color-red)" }}>
+          {eroare}
+        </div>
+      )}
+
+      {/* Form scor */}
+      {editScor && (
+        <div className="border-t px-4 pb-4 pt-3 space-y-3" style={{ borderColor: "var(--color-border)" }}>
+          <div className="grid grid-cols-2 gap-3">
+            <ScorInput label={numeAcasa} scor={sA} onScor={handleSetSA} marcatori={mA} onMarcatori={setMA} />
+            <ScorInput label={numeOaspete} scor={sO} onScor={handleSetSO} marcatori={mO} onMarcatori={setMO} />
+          </div>
+          <p className="text-xs" style={{ color: "var(--color-cream-muted)" }}>
+            Marcatori: numere de tricou separate prin virgulă (ex: <code>7,10,7</code>). Lăsați gol dacă scorul este 0.
+          </p>
+          <button
+            onClick={handleSalveazaScor}
+            disabled={loading}
+            className="w-full py-2 rounded-lg font-bold text-sm disabled:opacity-60"
+            style={{ background: "var(--color-gold)", color: "var(--color-bg)", fontFamily: "var(--font-oswald)" }}
+          >
+            {loading ? "Se salvează..." : "Salvează scorul"}
+          </button>
+        </div>
+      )}
+
+      {/* Form penalty */}
+      {editPenalty && (
+        <div className="border-t px-4 pb-4 pt-3 space-y-3" style={{ borderColor: "var(--color-gold)", borderTopWidth: "2px" }}>
+          <p className="text-xs font-medium" style={{ color: "var(--color-gold)" }}>
+            Scor egal după 90 de minute — introduceți rezultatul din penalty-uri:
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs mb-1 truncate" style={{ color: "var(--color-cream-muted)" }}>{numeAcasa}</label>
+              <input
+                type="number" min="0" max="99" value={pA} onChange={e => setPA(e.target.value)}
+                placeholder="0"
+                className="w-full px-3 py-1.5 rounded-lg text-lg font-bold text-center tabular-nums"
+                style={{ background: "var(--color-surface-2)", border: "1px solid var(--color-border)", color: "var(--color-cream)", fontFamily: "var(--font-oswald)" }}
+              />
+            </div>
+            <div>
+              <label className="block text-xs mb-1 truncate" style={{ color: "var(--color-cream-muted)" }}>{numeOaspete}</label>
+              <input
+                type="number" min="0" max="99" value={pO} onChange={e => setPO(e.target.value)}
+                placeholder="0"
+                className="w-full px-3 py-1.5 rounded-lg text-lg font-bold text-center tabular-nums"
+                style={{ background: "var(--color-surface-2)", border: "1px solid var(--color-border)", color: "var(--color-cream)", fontFamily: "var(--font-oswald)" }}
+              />
+            </div>
+          </div>
+          <button
+            onClick={handleSalveazaPenalty}
+            disabled={loading}
+            className="w-full py-2 rounded-lg font-bold text-sm disabled:opacity-60"
+            style={{ background: "var(--color-gold)", color: "var(--color-bg)", fontFamily: "var(--font-oswald)" }}
+          >
+            {loading ? "Se salvează..." : "Salvează penalty-uri"}
+          </button>
+        </div>
+      )}
+
+      {/* Form orar */}
+      {editOrar && (
+        <div className="border-t px-4 pb-4 pt-3 space-y-3" style={{ borderColor: "var(--color-border)" }}>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs mb-1" style={{ color: "var(--color-cream-muted)" }}>Ora (HH:MM)</label>
+              <input
+                type="text" value={ora} onChange={e => setOra(e.target.value)} placeholder="09:00"
+                className="w-full px-3 py-1.5 rounded-lg text-sm"
+                style={{ background: "var(--color-surface-2)", border: "1px solid var(--color-border)", color: "var(--color-cream)" }}
+              />
+            </div>
+            <div>
+              <label className="block text-xs mb-1" style={{ color: "var(--color-cream-muted)" }}>Teren</label>
+              <input
+                type="text" value={teren} onChange={e => setTeren(e.target.value)} placeholder="Teren 1"
+                className="w-full px-3 py-1.5 rounded-lg text-sm"
+                style={{ background: "var(--color-surface-2)", border: "1px solid var(--color-border)", color: "var(--color-cream)" }}
+              />
+            </div>
+          </div>
+          <button
+            onClick={handleSalveazaOrar}
+            disabled={loading}
+            className="w-full py-2 rounded-lg font-bold text-sm disabled:opacity-60"
+            style={{ background: "var(--color-gold)", color: "var(--color-bg)", fontFamily: "var(--font-oswald)" }}
+          >
+            {loading ? "Se salvează..." : "Salvează orar"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ScorInput({
+  label, scor, onScor, marcatori, onMarcatori,
+}: {
+  label: string; scor: string; onScor: (v: string) => void;
+  marcatori: string; onMarcatori: (v: string) => void;
+}) {
+  const scorZero = scor === "0";
+  return (
+    <div className="space-y-2">
+      <label className="block text-xs truncate" style={{ color: "var(--color-cream-muted)" }}>{label}</label>
+      <input
+        type="number" min="0" max="99" value={scor} onChange={e => onScor(e.target.value)}
+        placeholder="0"
+        className="w-full px-3 py-1.5 rounded-lg text-lg font-bold text-center tabular-nums"
+        style={{ background: "var(--color-surface-2)", border: "1px solid var(--color-border)", color: "var(--color-cream)", fontFamily: "var(--font-oswald)" }}
+      />
+      <input
+        type="text"
+        value={scorZero ? "" : marcatori}
+        onChange={e => onMarcatori(e.target.value)}
+        disabled={scorZero}
+        placeholder={scorZero ? "— (scor 0)" : "Tricouri: 7,10,7"}
+        className="w-full px-3 py-1.5 rounded-lg text-xs"
+        style={{
+          background: "var(--color-surface-2)", border: "1px solid var(--color-border)",
+          color: scorZero ? "var(--color-cream-muted)" : "var(--color-cream)",
+          opacity: scorZero ? 0.5 : 1,
+        }}
+      />
+    </div>
+  );
+}

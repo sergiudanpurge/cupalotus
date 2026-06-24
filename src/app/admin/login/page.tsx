@@ -43,7 +43,7 @@ export default function LoginPage() {
             className="text-3xl font-bold"
             style={{ fontFamily: "var(--font-oswald)", color: "var(--color-gold)" }}
           >
-            CUPA LOTUS 2026
+            CUPA LOTUS 2027 · EDIȚIA A IV-A
           </div>
           <div className="text-sm mt-1" style={{ color: "var(--color-cream-muted)" }}>
             Panou Administrator

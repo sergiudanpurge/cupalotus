@@ -32,6 +32,15 @@ export function MeciEditCard({ meci }: { meci: Meci }) {
   const [mA, setMA] = useState(meci.marcatoriAcasa ?? "");
   const [mO, setMO] = useState(meci.marcatoriOaspete ?? "");
 
+  function handleSetSA(v: string) {
+    setSA(v);
+    if (v === "0") setMA("");
+  }
+  function handleSetSO(v: string) {
+    setSO(v);
+    if (v === "0") setMO("");
+  }
+
   // Câmpuri orar
   const [ora,   setOra]   = useState(meci.ora);
   const [teren, setTeren] = useState(meci.teren);
@@ -162,17 +171,17 @@ export function MeciEditCard({ meci }: { meci: Meci }) {
           <div className="grid grid-cols-2 gap-3">
             <ScorInput
               label={meci.echipaAcasa?.nume ?? "Acasă"}
-              scor={sA} onScor={setSA}
+              scor={sA} onScor={handleSetSA}
               marcatori={mA} onMarcatori={setMA}
             />
             <ScorInput
               label={meci.echipaOaspete?.nume ?? "Oaspete"}
-              scor={sO} onScor={setSO}
+              scor={sO} onScor={handleSetSO}
               marcatori={mO} onMarcatori={setMO}
             />
           </div>
           <p className="text-xs" style={{ color: "var(--color-cream-muted)" }}>
-            Marcatori: numerele de tricou separate prin virgulă (ex: <code>7,10,7</code>). Numărul trebuie să coincidă cu scorul.
+            Marcatori: numerele de tricou separate prin virgulă (ex: <code>7,10,7</code>). Lăsați gol dacă scorul este 0.
           </p>
           <button
             onClick={handleSalveazaScor}
@@ -232,6 +241,7 @@ function ScorInput({
   label: string; scor: string; onScor: (v: string) => void;
   marcatori: string; onMarcatori: (v: string) => void;
 }) {
+  const scorZero = scor === "0";
   return (
     <div className="space-y-2">
       <label className="block text-xs truncate" style={{ color: "var(--color-cream-muted)" }}>{label}</label>
@@ -252,14 +262,16 @@ function ScorInput({
       />
       <input
         type="text"
-        value={marcatori}
+        value={scorZero ? "" : marcatori}
         onChange={(e) => onMarcatori(e.target.value)}
-        placeholder="Tricouri: 7,10,7"
+        disabled={scorZero}
+        placeholder={scorZero ? "— (scor 0)" : "Tricouri: 7,10,7"}
         className="w-full px-3 py-1.5 rounded-lg text-xs"
         style={{
           background: "var(--color-surface-2)",
           border: "1px solid var(--color-border)",
-          color: "var(--color-cream)",
+          color: scorZero ? "var(--color-cream-muted)" : "var(--color-cream)",
+          opacity: scorZero ? 0.5 : 1,
         }}
       />
     </div>

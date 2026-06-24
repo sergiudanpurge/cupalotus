@@ -2,19 +2,21 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-
-const TABS = [
-  { id: "clasament",   label: "Clasament" },
-  { id: "program",     label: "Program" },
-  { id: "calificari",  label: "Calificări" },
-  { id: "golgheteri",  label: "Golgheteri" },
-  { id: "podium",      label: "Podium" },
-];
+import { useTranslation } from "@/contexts/LanguageContext";
 
 export function TabNav() {
-  const pathname = usePathname();
+  const pathname    = usePathname();
   const searchParams = useSearchParams();
-  const activeTab = searchParams.get("tab") ?? "clasament";
+  const activeTab   = searchParams.get("tab") ?? "clasament";
+  const { t }       = useTranslation();
+
+  const TABS = [
+    { id: "clasament",  label: t.tabs.clasament },
+    { id: "program",    label: t.tabs.program },
+    { id: "calificari", label: t.tabs.calificari },
+    { id: "golgheteri", label: t.tabs.golgheteri },
+    { id: "podium",     label: t.tabs.podium },
+  ];
 
   return (
     <div

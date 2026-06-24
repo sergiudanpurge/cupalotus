@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 188" width="150" height="188">
+  <!-- Background -->
+  <rect width="150" height="188" fill="#0f0d0a"/>
+  <!-- Gold + red top accent -->
+  <rect x="0" y="0" width="100" height="2" fill="#d9a544"/>
+  <rect x="0" y="0" width="40"  height="2" fill="#b3402f"/>
+
+  <!-- Lotus flower -->
+  <g transform="translate(75,72)">
+    <ellipse rx="5.5" ry="17" fill="none" stroke="#d9a544" stroke-width="1.2" opacity="0.75"/>
+    <ellipse rx="5.5" ry="17" transform="rotate(45)"  fill="none" stroke="#d9a544" stroke-width="1.2" opacity="0.75"/>
+    <ellipse rx="5.5" ry="17" transform="rotate(90)"  fill="none" stroke="#d9a544" stroke-width="1.2" opacity="0.75"/>
+    <ellipse rx="5.5" ry="17" transform="rotate(135)" fill="none" stroke="#d9a544" stroke-width="1.2" opacity="0.75"/>
+    <circle r="10" fill="none" stroke="#d9a544" stroke-width="1.5"/>
+    <circle r="3.5" fill="#d9a544"/>
+  </g>
+
+  <!-- Title -->
+  <text x="75" y="114" text-anchor="middle" font-family="Georgia,serif"
+        font-size="10" letter-spacing="3.5" fill="#d9a544">CUPA LOTUS</text>
+  <text x="75" y="133" text-anchor="middle" font-family="Georgia,serif"
+        font-size="23" font-weight="bold" fill="#f3c969">2026</text>
+
+  <!-- Divider -->
+  <line x1="30" y1="143" x2="120" y2="143" stroke="#2d2820" stroke-width="1"/>
+
+  <!-- Info -->
+  <text x="75" y="155" text-anchor="middle" font-family="sans-serif"
+        font-size="7" fill="#9e8e7a">29–31 mai 2026</text>
+  <text x="75" y="166" text-anchor="middle" font-family="sans-serif"
+        font-size="6.5" fill="#9e8e7a">Baza Sportivă C.S. Lotus</text>
+  <text x="75" y="176" text-anchor="middle" font-family="sans-serif"
+        font-size="6.5" fill="#9e8e7a">Băile Felix</text>
+
+  <!-- Placeholder note -->
+  <text x="75" y="186" text-anchor="middle" font-family="sans-serif"
+        font-size="4.5" fill="#3a3530">placeholder · înlocuiți cu cupa-lotus-poster.jpg</text>
+</svg>
