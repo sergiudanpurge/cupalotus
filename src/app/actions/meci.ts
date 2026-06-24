@@ -548,3 +548,81 @@ export async function reseteazaEliminatorii(categorieId: string): Promise<Salvea
   revalidatePath(`/admin/${categorieId}`);
   return { ok: true };
 }
+
+// ── 11. Schimbă echipele dintr-un meci de grupă ──────────────
+
+export async function salveazaEchipeMeci(
+  meciId: string,
+  echipaAcasaId: string,
+  echipaOaspeteId: string,
+): Promise<SalveazaScorResult> {
+  await requireAdmin();
+  if (!echipaAcasaId || !echipaOaspeteId) return { ok: false, eroare: "Selectați ambele echipe." };
+  if (echipaAcasaId === echipaOaspeteId)   return { ok: false, eroare: "Echipele trebuie să fie diferite." };
+
+  const meci = await prisma.meci.findUnique({ where: { id: meciId } });
+  if (!meci)    return { ok: false, eroare: "Meciul nu există." };
+  if (meci.jucat) return { ok: false, eroare: "Nu se pot schimba echipele unui meci deja jucat." };
+
+  await prisma.meci.update({ where: { id: meciId }, data: { echipaAcasaId, echipaOaspeteId } });
+  revalidatePath(`/${meci.categorieId}`);
+  revalidatePath(`/admin/${meci.categorieId}`);
+  return { ok: true };
+}
+
+// ── 12. Randomizare grupe (tragere la sorți) ─────────────────
+
+export async function randomizeazaGrupe(categorieId: string): Promise<SalveazaScorResult> {
+  await requireAdmin();
+
+  const jucate = await prisma.meci.count({ where: { categorieId, faza: "grupa", jucat: true } });
+  if (jucate > 0) {
+    return { ok: false, eroare: `Nu se poate randomiza: ${jucate} meciuri deja jucate.` };
+  }
+
+  const toateEchipele = await prisma.echipa.findMany({ where: { categorieId }, orderBy: { id: "asc" } });
+  if (toateEchipele.length < 2) return { ok: false, eroare: "Nu sunt suficiente echipe." };
+
+  // Fisher-Yates shuffle
+  const shuffled = [...toateEchipele];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  const half  = Math.ceil(shuffled.length / 2);
+  const grupaA = shuffled.slice(0, half);
+  const grupaB = shuffled.slice(half);
+
+  // Actualizăm grupa fiecărei echipe
+  await prisma.$transaction([
+    ...grupaA.map(e => prisma.echipa.update({ where: { id: e.id }, data: { grupa: "A" } })),
+    ...grupaB.map(e => prisma.echipa.update({ where: { id: e.id }, data: { grupa: "B" } })),
+  ]);
+
+  // Ștergem meciurile vechi și regenerăm
+  await prisma.meci.deleteMany({ where: { categorieId, faza: "grupa" } });
+
+  for (const [grup, echipe] of [["A", grupaA], ["B", grupaB]] as const) {
+    if (echipe.length < 2) continue;
+    const ids   = echipe.map(e => e.id);
+    const teren = grup === "A" ? "Teren 1" : "Teren 2";
+    const runde = genereazaRoundRobin(ids.length);
+    await prisma.meci.createMany({
+      data: runde.flatMap((runda, rIdx) => {
+        const { ziua, ora } = getOraRunda(rIdx + 1);
+        return runda.map(m => ({
+          categorieId, faza: "grupa", grupa: grup, ziua, ora, teren,
+          echipaAcasaId:   ids[m.acasa],
+          echipaOaspeteId: ids[m.oaspete],
+          jucat: false,
+        }));
+      }),
+    });
+  }
+
+  revalidatePath(`/${categorieId}`);
+  revalidatePath(`/admin/${categorieId}`);
+  revalidatePath(`/admin/${categorieId}/echipe`);
+  return { ok: true };
+}

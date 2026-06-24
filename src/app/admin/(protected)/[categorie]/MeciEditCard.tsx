@@ -1,15 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { salveazaScor, salveazaOraTeren, reseteazaScor } from "@/app/actions/meci";
+import { salveazaScor, salveazaOraTeren, reseteazaScor, salveazaEchipeMeci } from "@/app/actions/meci";
+
+type Echipa = { id: string; nume: string };
 
 type Meci = {
   id: string;
   grupa: string | null;
   ora: string;
   teren: string;
-  echipaAcasa:   { id: string; nume: string } | null;
-  echipaOaspete: { id: string; nume: string } | null;
+  echipaAcasa:   Echipa | null;
+  echipaOaspete: Echipa | null;
   scorAcasa:      number | null;
   scorOaspete:    number | null;
   penaltyAcasa:   number | null;
@@ -19,31 +21,28 @@ type Meci = {
   marcatoriOaspete: string | null;
 };
 
-export function MeciEditCard({ meci }: { meci: Meci }) {
-  const [editScor, setEditScor]   = useState(false);
-  const [editOrar, setEditOrar]   = useState(false);
-  const [loading, setLoading]     = useState(false);
-  const [eroare, setEroare]       = useState("");
-  const [success, setSuccess]     = useState(false);
+export function MeciEditCard({ meci, echipeGrupa }: { meci: Meci; echipeGrupa: Echipa[] }) {
+  const [editScor,   setEditScor]   = useState(false);
+  const [editOrar,   setEditOrar]   = useState(false);
+  const [editEchipe, setEditEchipe] = useState(false);
+  const [loading,    setLoading]    = useState(false);
+  const [eroare,     setEroare]     = useState("");
+  const [success,    setSuccess]    = useState(false);
 
-  // Câmpuri scor
   const [sA, setSA] = useState(String(meci.scorAcasa ?? ""));
   const [sO, setSO] = useState(String(meci.scorOaspete ?? ""));
   const [mA, setMA] = useState(meci.marcatoriAcasa ?? "");
   const [mO, setMO] = useState(meci.marcatoriOaspete ?? "");
 
-  function handleSetSA(v: string) {
-    setSA(v);
-    if (v === "0") setMA("");
-  }
-  function handleSetSO(v: string) {
-    setSO(v);
-    if (v === "0") setMO("");
-  }
+  function handleSetSA(v: string) { setSA(v); if (v === "0") setMA(""); }
+  function handleSetSO(v: string) { setSO(v); if (v === "0") setMO(""); }
 
-  // Câmpuri orar
   const [ora,   setOra]   = useState(meci.ora);
   const [teren, setTeren] = useState(meci.teren);
+  const [selA,  setSelA]  = useState(meci.echipaAcasa?.id   ?? "");
+  const [selO,  setSelO]  = useState(meci.echipaOaspete?.id ?? "");
+
+  function closeAll() { setEditScor(false); setEditOrar(false); setEditEchipe(false); setEroare(""); }
 
   function flash(ok: boolean, msg?: string) {
     if (ok) { setSuccess(true); setTimeout(() => setSuccess(false), 2500); }
@@ -54,9 +53,8 @@ export function MeciEditCard({ meci }: { meci: Meci }) {
   async function handleSalveazaScor() {
     setEroare(""); setLoading(true);
     const scA = parseInt(sA), scO = parseInt(sO);
-    if (isNaN(scA) || isNaN(scO) || scA < 0 || scO < 0) {
+    if (isNaN(scA) || isNaN(scO) || scA < 0 || scO < 0)
       return flash(false, "Scorul trebuie să fie un număr pozitiv.");
-    }
     const res = await salveazaScor(meci.id, scA, scO, mA, mO);
     flash(res.ok, res.ok ? undefined : res.eroare);
     if (res.ok) setEditScor(false);
@@ -77,17 +75,26 @@ export function MeciEditCard({ meci }: { meci: Meci }) {
     if (res.ok) setEditOrar(false);
   }
 
+  async function handleSalveazaEchipe() {
+    setEroare(""); setLoading(true);
+    const res = await salveazaEchipeMeci(meci.id, selA, selO);
+    flash(res.ok, res.ok ? undefined : res.eroare);
+    if (res.ok) setEditEchipe(false);
+  }
+
   const jucat = meci.jucat && meci.scorAcasa != null;
+
+  const inputStyle = {
+    background: "var(--color-surface-2)",
+    border: "1px solid var(--color-border)",
+    color: "var(--color-cream)",
+  };
 
   return (
     <div
       className="rounded-xl border overflow-hidden"
-      style={{
-        background: "var(--color-surface)",
-        borderColor: jucat ? "rgba(74,222,128,0.2)" : "var(--color-border)",
-      }}
+      style={{ background: "var(--color-surface)", borderColor: jucat ? "rgba(74,222,128,0.2)" : "var(--color-border)" }}
     >
-      {/* Linia principală */}
       <div className="px-4 py-3">
         {/* Meta */}
         <div className="flex items-center gap-2 mb-2">
@@ -103,9 +110,7 @@ export function MeciEditCard({ meci }: { meci: Meci }) {
               ✓ Jucat
             </span>
           )}
-          {success && (
-            <span className="text-xs ml-auto" style={{ color: "var(--color-green-rank-text)" }}>✓ Salvat</span>
-          )}
+          {success && <span className="text-xs ml-auto" style={{ color: "var(--color-green-rank-text)" }}>✓ Salvat</span>}
         </div>
 
         {/* Echipe + scor */}
@@ -115,12 +120,7 @@ export function MeciEditCard({ meci }: { meci: Meci }) {
           </span>
           <span
             className="text-lg font-bold px-3 py-0.5 rounded tabular-nums"
-            style={{
-              fontFamily: "var(--font-oswald)",
-              background: "var(--color-surface-2)",
-              color: jucat ? "var(--color-cream)" : "var(--color-cream-muted)",
-              minWidth: "4rem", textAlign: "center",
-            }}
+            style={{ fontFamily: "var(--font-oswald)", background: "var(--color-surface-2)", color: jucat ? "var(--color-cream)" : "var(--color-cream-muted)", minWidth: "4rem", textAlign: "center" }}
           >
             {jucat ? `${meci.scorAcasa} – ${meci.scorOaspete}` : "– – –"}
           </span>
@@ -130,21 +130,30 @@ export function MeciEditCard({ meci }: { meci: Meci }) {
         </div>
 
         {/* Acțiuni */}
-        <div className="flex gap-2 mt-3">
+        <div className="flex gap-2 mt-3 flex-wrap">
           <button
-            onClick={() => { setEditScor(!editScor); setEditOrar(false); setEroare(""); }}
+            onClick={() => { closeAll(); setEditScor(!editScor); }}
             className="text-xs px-3 py-1.5 rounded-lg border transition-colors hover:border-[var(--color-gold)]"
             style={{ borderColor: "var(--color-border)", color: "var(--color-cream-muted)" }}
           >
             {editScor ? "✕ Închide" : "✎ Scor"}
           </button>
           <button
-            onClick={() => { setEditOrar(!editOrar); setEditScor(false); setEroare(""); }}
+            onClick={() => { closeAll(); setEditOrar(!editOrar); }}
             className="text-xs px-3 py-1.5 rounded-lg border transition-colors hover:border-[var(--color-gold)]"
             style={{ borderColor: "var(--color-border)", color: "var(--color-cream-muted)" }}
           >
             {editOrar ? "✕ Închide" : "⏱ Orar"}
           </button>
+          {!jucat && echipeGrupa.length >= 2 && (
+            <button
+              onClick={() => { closeAll(); setEditEchipe(!editEchipe); }}
+              className="text-xs px-3 py-1.5 rounded-lg border transition-colors hover:border-[var(--color-gold)]"
+              style={{ borderColor: "var(--color-border)", color: "var(--color-cream-muted)" }}
+            >
+              {editEchipe ? "✕ Închide" : "⇄ Echipe"}
+            </button>
+          )}
           {jucat && (
             <button
               onClick={handleReset}
@@ -158,7 +167,6 @@ export function MeciEditCard({ meci }: { meci: Meci }) {
         </div>
       </div>
 
-      {/* Eroare */}
       {eroare && (
         <div className="mx-4 mb-3 px-3 py-2 rounded-lg text-xs" style={{ background: "rgba(179,64,47,0.15)", color: "var(--color-red)" }}>
           {eroare}
@@ -169,24 +177,14 @@ export function MeciEditCard({ meci }: { meci: Meci }) {
       {editScor && (
         <div className="border-t px-4 pb-4 pt-3 space-y-3" style={{ borderColor: "var(--color-border)" }}>
           <div className="grid grid-cols-2 gap-3">
-            <ScorInput
-              label={meci.echipaAcasa?.nume ?? "Acasă"}
-              scor={sA} onScor={handleSetSA}
-              marcatori={mA} onMarcatori={setMA}
-            />
-            <ScorInput
-              label={meci.echipaOaspete?.nume ?? "Oaspete"}
-              scor={sO} onScor={handleSetSO}
-              marcatori={mO} onMarcatori={setMO}
-            />
+            <ScorInput label={meci.echipaAcasa?.nume ?? "Acasă"} scor={sA} onScor={handleSetSA} marcatori={mA} onMarcatori={setMA} />
+            <ScorInput label={meci.echipaOaspete?.nume ?? "Oaspete"} scor={sO} onScor={handleSetSO} marcatori={mO} onMarcatori={setMO} />
           </div>
           <p className="text-xs" style={{ color: "var(--color-cream-muted)" }}>
             Marcatori: numerele de tricou separate prin virgulă (ex: <code>7,10,7</code>). Lăsați gol dacă scorul este 0.
           </p>
-          <button
-            onClick={handleSalveazaScor}
-            disabled={loading}
-            className="w-full py-2 rounded-lg font-bold text-sm disabled:opacity-60 transition-opacity"
+          <button onClick={handleSalveazaScor} disabled={loading}
+            className="w-full py-2 rounded-lg font-bold text-sm disabled:opacity-60"
             style={{ background: "var(--color-gold)", color: "var(--color-bg)", fontFamily: "var(--font-oswald)" }}
           >
             {loading ? "Se salvează..." : "Salvează scorul"}
@@ -200,30 +198,16 @@ export function MeciEditCard({ meci }: { meci: Meci }) {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs mb-1" style={{ color: "var(--color-cream-muted)" }}>Ora (HH:MM)</label>
-              <input
-                type="text"
-                value={ora}
-                onChange={(e) => setOra(e.target.value)}
-                placeholder="16:15"
-                className="w-full px-3 py-1.5 rounded-lg text-sm"
-                style={{ background: "var(--color-surface-2)", border: "1px solid var(--color-border)", color: "var(--color-cream)" }}
-              />
+              <input type="text" value={ora} onChange={e => setOra(e.target.value)} placeholder="16:15"
+                className="w-full px-3 py-1.5 rounded-lg text-sm" style={inputStyle} />
             </div>
             <div>
               <label className="block text-xs mb-1" style={{ color: "var(--color-cream-muted)" }}>Teren</label>
-              <input
-                type="text"
-                value={teren}
-                onChange={(e) => setTeren(e.target.value)}
-                placeholder="Teren 1"
-                className="w-full px-3 py-1.5 rounded-lg text-sm"
-                style={{ background: "var(--color-surface-2)", border: "1px solid var(--color-border)", color: "var(--color-cream)" }}
-              />
+              <input type="text" value={teren} onChange={e => setTeren(e.target.value)} placeholder="Teren 1"
+                className="w-full px-3 py-1.5 rounded-lg text-sm" style={inputStyle} />
             </div>
           </div>
-          <button
-            onClick={handleSalveazaOrar}
-            disabled={loading}
+          <button onClick={handleSalveazaOrar} disabled={loading}
             className="w-full py-2 rounded-lg font-bold text-sm disabled:opacity-60"
             style={{ background: "var(--color-gold)", color: "var(--color-bg)", fontFamily: "var(--font-oswald)" }}
           >
@@ -231,13 +215,52 @@ export function MeciEditCard({ meci }: { meci: Meci }) {
           </button>
         </div>
       )}
+
+      {/* Form echipe — dropdown */}
+      {editEchipe && (
+        <div className="border-t px-4 pb-4 pt-3 space-y-3" style={{ borderColor: "var(--color-border)" }}>
+          <p className="text-xs" style={{ color: "var(--color-cream-muted)" }}>
+            Schimbă echipele care joacă în acest meci (doar meciuri nejucate).
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs mb-1" style={{ color: "var(--color-cream-muted)" }}>Acasă</label>
+              <select value={selA} onChange={e => setSelA(e.target.value)}
+                className="w-full px-3 py-1.5 rounded-lg text-sm"
+                style={inputStyle}
+              >
+                <option value="">— selectează —</option>
+                {echipeGrupa.map(e => (
+                  <option key={e.id} value={e.id} disabled={e.id === selO}>{e.nume}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs mb-1" style={{ color: "var(--color-cream-muted)" }}>Oaspete</label>
+              <select value={selO} onChange={e => setSelO(e.target.value)}
+                className="w-full px-3 py-1.5 rounded-lg text-sm"
+                style={inputStyle}
+              >
+                <option value="">— selectează —</option>
+                {echipeGrupa.map(e => (
+                  <option key={e.id} value={e.id} disabled={e.id === selA}>{e.nume}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <button onClick={handleSalveazaEchipe} disabled={loading || !selA || !selO || selA === selO}
+            className="w-full py-2 rounded-lg font-bold text-sm disabled:opacity-60"
+            style={{ background: "var(--color-gold)", color: "var(--color-bg)", fontFamily: "var(--font-oswald)" }}
+          >
+            {loading ? "Se salvează..." : "Salvează echipele"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
 
-function ScorInput({
-  label, scor, onScor, marcatori, onMarcatori,
-}: {
+function ScorInput({ label, scor, onScor, marcatori, onMarcatori }: {
   label: string; scor: string; onScor: (v: string) => void;
   marcatori: string; onMarcatori: (v: string) => void;
 }) {
@@ -245,34 +268,14 @@ function ScorInput({
   return (
     <div className="space-y-2">
       <label className="block text-xs truncate" style={{ color: "var(--color-cream-muted)" }}>{label}</label>
-      <input
-        type="number"
-        min="0"
-        max="99"
-        value={scor}
-        onChange={(e) => onScor(e.target.value)}
-        placeholder="0"
+      <input type="number" min="0" max="99" value={scor} onChange={e => onScor(e.target.value)} placeholder="0"
         className="w-full px-3 py-1.5 rounded-lg text-lg font-bold text-center tabular-nums"
-        style={{
-          background: "var(--color-surface-2)",
-          border: "1px solid var(--color-border)",
-          color: "var(--color-cream)",
-          fontFamily: "var(--font-oswald)",
-        }}
+        style={{ background: "var(--color-surface-2)", border: "1px solid var(--color-border)", color: "var(--color-cream)", fontFamily: "var(--font-oswald)" }}
       />
-      <input
-        type="text"
-        value={scorZero ? "" : marcatori}
-        onChange={(e) => onMarcatori(e.target.value)}
-        disabled={scorZero}
-        placeholder={scorZero ? "— (scor 0)" : "Tricouri: 7,10,7"}
+      <input type="text" value={scorZero ? "" : marcatori} onChange={e => onMarcatori(e.target.value)}
+        disabled={scorZero} placeholder={scorZero ? "— (scor 0)" : "Tricouri: 7,10,7"}
         className="w-full px-3 py-1.5 rounded-lg text-xs"
-        style={{
-          background: "var(--color-surface-2)",
-          border: "1px solid var(--color-border)",
-          color: scorZero ? "var(--color-cream-muted)" : "var(--color-cream)",
-          opacity: scorZero ? 0.5 : 1,
-        }}
+        style={{ background: "var(--color-surface-2)", border: "1px solid var(--color-border)", color: scorZero ? "var(--color-cream-muted)" : "var(--color-cream)", opacity: scorZero ? 0.5 : 1 }}
       />
     </div>
   );

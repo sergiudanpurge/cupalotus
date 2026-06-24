@@ -6,6 +6,7 @@ import { MeciEditCard } from "./MeciEditCard";
 import { EvenimentEditCard } from "./EvenimentEditCard";
 import { EliminatoriiGenerateButton } from "./EliminatoriiGenerateButton";
 import { EliminatoriiEditCard } from "./EliminatoriiEditCard";
+import { RandomizeazaGrupeButton } from "./RandomizeazaGrupeButton";
 
 // Helper: eticheta pentru un slot TBD (winner/loser/rank)
 function slotLabel(tip: string | null, val: string | null): string {
@@ -40,14 +41,21 @@ export default async function AdminCategoriePage({
   const categorie = await prisma.categorieVarsta.findUnique({ where: { id: catId } });
   if (!categorie) notFound();
 
-  const meciuri = await prisma.meci.findMany({
-    where: { categorieId: catId, faza: "grupa" },
-    include: {
-      echipaAcasa:   { select: { id: true, nume: true, grupa: true } },
-      echipaOaspete: { select: { id: true, nume: true, grupa: true } },
-    },
-    orderBy: [{ ziua: "asc" }, { ora: "asc" }],
-  });
+  const [meciuri, echipe] = await Promise.all([
+    prisma.meci.findMany({
+      where: { categorieId: catId, faza: "grupa" },
+      include: {
+        echipaAcasa:   { select: { id: true, nume: true, grupa: true } },
+        echipaOaspete: { select: { id: true, nume: true, grupa: true } },
+      },
+      orderBy: [{ ziua: "asc" }, { ora: "asc" }],
+    }),
+    prisma.echipa.findMany({
+      where: { categorieId: catId },
+      orderBy: [{ grupa: "asc" }, { id: "asc" }],
+      select: { id: true, nume: true, grupa: true },
+    }),
+  ]);
 
   // Meciuri eliminatorii
   const eliminatorii = await prisma.meci.findMany({
@@ -151,9 +159,12 @@ export default async function AdminCategoriePage({
 
       {/* Meciuri grupă */}
       <div className="space-y-6 mb-10">
-        <h2 className="text-xs uppercase tracking-widest" style={{ color: "var(--color-cream-muted)" }}>
-          Meciuri Grupă — Vineri &amp; Sâmbătă
-        </h2>
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <h2 className="text-xs uppercase tracking-widest" style={{ color: "var(--color-cream-muted)" }}>
+            Meciuri Grupă — Vineri &amp; Sâmbătă
+          </h2>
+          <RandomizeazaGrupeButton categorieId={catId} disabled={jucate > 0} />
+        </div>
         {zile.map((ziua) => (
           <div key={ziua}>
             <h3 className="text-xs uppercase tracking-widest mb-3" style={{ color: "var(--color-cream-muted)" }}>
@@ -161,7 +172,11 @@ export default async function AdminCategoriePage({
             </h3>
             <div className="space-y-3">
               {peZile[ziua].map((meci) => (
-                <MeciEditCard key={meci.id} meci={meci} />
+                <MeciEditCard
+                  key={meci.id}
+                  meci={meci}
+                  echipeGrupa={echipe.filter(e => e.grupa === meci.grupa)}
+                />
               ))}
             </div>
           </div>
