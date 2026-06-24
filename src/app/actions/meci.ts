@@ -160,33 +160,16 @@ export async function reseteazaScor(meciId: string): Promise<SalveazaScorResult>
   await prisma.meci.update({
     where: { id: meciId },
     data: {
-      scorAcasa: null,
-      scorOaspete: null,
-      penaltyAcasa: null,
-      penaltyOaspete: null,
-      marcatoriAcasa: null,
-      marcatoriOaspete: null,
+      scorAcasa: null, scorOaspete: null,
+      penaltyAcasa: null, penaltyOaspete: null,
+      marcatoriAcasa: null, marcatoriOaspete: null,
       jucat: false,
     },
   });
 
-  // La reset eliminatoriu — ștergem echipele din meciurile dependente
+  // La reset eliminatoriu — cascadăm: ștergem echipele ȘI scorurile din meciurile dependente
   if (meci.faza === "eliminatorii" && meci.cod) {
-    const dependente = await prisma.meci.findMany({
-      where: { categorieId: meci.categorieId, faza: "eliminatorii" },
-    });
-    for (const dep of dependente) {
-      const up: Record<string, null> = {};
-      if ((dep.refSlotAcasaTip === "winner" || dep.refSlotAcasaTip === "loser") && dep.refSlotAcasaVal === meci.cod) {
-        up.echipaAcasaId = null;
-      }
-      if ((dep.refSlotOaspeteTip === "winner" || dep.refSlotOaspeteTip === "loser") && dep.refSlotOaspeteVal === meci.cod) {
-        up.echipaOaspeteId = null;
-      }
-      if (Object.keys(up).length > 0) {
-        await prisma.meci.update({ where: { id: dep.id }, data: up });
-      }
-    }
+    await cascadeReset(meci.categorieId, meci.cod);
   }
 
   revalidatePath(`/${meci.categorieId}`);
@@ -318,7 +301,42 @@ export async function salveazaEveniment(
   return { ok: true };
 }
 
+// ── Helper: resetare în cascadă a meciurilor dependente ──────
+// Când meciul cu codul `codSursa` e resetat, toate meciurile care
+// depind de el (prin winner/loser) sunt golite: echipe + scor.
+
+async function cascadeReset(categorieId: string, codSursa: string) {
+  const dependente = await prisma.meci.findMany({
+    where: { categorieId, faza: "eliminatorii" },
+  });
+  for (const dep of dependente) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data: Record<string, any> = {};
+    if ((dep.refSlotAcasaTip === "winner" || dep.refSlotAcasaTip === "loser") && dep.refSlotAcasaVal === codSursa) {
+      data.echipaAcasaId = null;
+    }
+    if ((dep.refSlotOaspeteTip === "winner" || dep.refSlotOaspeteTip === "loser") && dep.refSlotOaspeteVal === codSursa) {
+      data.echipaOaspeteId = null;
+    }
+    if (Object.keys(data).length > 0) {
+      // Resetăm și scorul meciului dependent (indiferent dacă era jucat sau nu)
+      data.scorAcasa = null;
+      data.scorOaspete = null;
+      data.penaltyAcasa = null;
+      data.penaltyOaspete = null;
+      data.marcatoriAcasa = null;
+      data.marcatoriOaspete = null;
+      data.jucat = false;
+      await prisma.meci.update({ where: { id: dep.id }, data });
+      // Cascadăm mai departe (dacă finala depindea de bronz etc.)
+      if (dep.cod) await cascadeReset(categorieId, dep.cod);
+    }
+  }
+}
+
 // ── Helper intern: propagă câștigătoarea la meciuri dependente ─
+// Dacă echipa s-a SCHIMBAT față de ce era înainte și meciul era deja
+// jucat, resetăm scorul acelui meci și cascadăm mai departe.
 
 async function propagaCastigatori(
   categorieId: string,
@@ -331,15 +349,41 @@ async function propagaCastigatori(
   });
 
   for (const dep of dependente) {
-    const up: Record<string, string> = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data: Record<string, any> = {};
+    let teamChanged = false;
 
-    if (dep.refSlotAcasaTip === "winner" && dep.refSlotAcasaVal === cod)  up.echipaAcasaId   = castigatoareId;
-    if (dep.refSlotAcasaTip === "loser"  && dep.refSlotAcasaVal === cod)  up.echipaAcasaId   = invinsaId;
-    if (dep.refSlotOaspeteTip === "winner" && dep.refSlotOaspeteVal === cod) up.echipaOaspeteId = castigatoareId;
-    if (dep.refSlotOaspeteTip === "loser"  && dep.refSlotOaspeteVal === cod) up.echipaOaspeteId = invinsaId;
+    if (dep.refSlotAcasaTip === "winner" && dep.refSlotAcasaVal === cod) {
+      if (dep.echipaAcasaId !== castigatoareId) teamChanged = true;
+      data.echipaAcasaId = castigatoareId;
+    }
+    if (dep.refSlotAcasaTip === "loser" && dep.refSlotAcasaVal === cod) {
+      if (dep.echipaAcasaId !== invinsaId) teamChanged = true;
+      data.echipaAcasaId = invinsaId;
+    }
+    if (dep.refSlotOaspeteTip === "winner" && dep.refSlotOaspeteVal === cod) {
+      if (dep.echipaOaspeteId !== castigatoareId) teamChanged = true;
+      data.echipaOaspeteId = castigatoareId;
+    }
+    if (dep.refSlotOaspeteTip === "loser" && dep.refSlotOaspeteVal === cod) {
+      if (dep.echipaOaspeteId !== invinsaId) teamChanged = true;
+      data.echipaOaspeteId = invinsaId;
+    }
 
-    if (Object.keys(up).length > 0) {
-      await prisma.meci.update({ where: { id: dep.id }, data: up });
+    if (Object.keys(data).length > 0) {
+      if (teamChanged && dep.jucat) {
+        // Echipa s-a schimbat și meciul era deja jucat — resetăm scorul
+        data.scorAcasa = null;
+        data.scorOaspete = null;
+        data.penaltyAcasa = null;
+        data.penaltyOaspete = null;
+        data.marcatoriAcasa = null;
+        data.marcatoriOaspete = null;
+        data.jucat = false;
+        // Cascadăm și mai departe (dacă finala asta alimenta alt meci)
+        if (dep.cod) await cascadeReset(categorieId, dep.cod);
+      }
+      await prisma.meci.update({ where: { id: dep.id }, data });
     }
   }
 }
