@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { TournamentBanner } from "@/components/TournamentBanner";
 import { HomeCategorySection } from "./HomeCategorySection";
-import { HomeGallery } from "./HomeGallery";
 
 export const revalidate = 30;
 
@@ -37,7 +36,6 @@ export default async function HomePage() {
     <main className="max-w-4xl mx-auto px-4 py-8 w-full">
       <TournamentBanner />
       <HomeCategorySection categorii={categorii} />
-      <HomeGallery />
     </main>
   );
 }
