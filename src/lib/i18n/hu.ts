@@ -57,6 +57,9 @@ export const hu: Dict = {
     winner:     "Gy.",
     loser:      "V.",
     bracket:    "Tábla",
+    grandFinal: "Nagydöntő",
+    smallFinal: "Bronzdöntő",
+    final:      "Döntő",
   },
   scorers: {
     player:  "Játékos",

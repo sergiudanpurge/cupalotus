@@ -182,12 +182,13 @@ const s = StyleSheet.create({
     backgroundColor: C.bgGreen,
   },
   cardEventRow: {
-    flexDirection: "row",
+    flexDirection: "column",
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingVertical: 6,
     borderBottomWidth: 0.5,
     borderColor: C.border,
     alignItems: "center",
+    justifyContent: "center",
     backgroundColor: "#fdf8ec",
   },
 
@@ -198,8 +199,8 @@ const s = StyleSheet.create({
   mEchipa: { flex: 1 },
   mScore:  { width: 30, textAlign: "center", fontFamily: "Helvetica-Bold" },
   mPen:    { width: 36, textAlign: "center", color: C.muted, fontSize: 6.5 },
-  mEventOra:   { width: 26, color: C.gold, fontFamily: "Helvetica-Bold" },
-  mEventLabel: { flex: 1, color: C.goldDark, fontFamily: "Helvetica-Bold" },
+  mEventOra:   { color: C.gold, fontSize: 7, textAlign: "center" },
+  mEventLabel: { color: C.goldDark, fontFamily: "Helvetica-Bold", fontSize: 8.5, textAlign: "center" },
 
   // ── Celule clasament grupe ──
   cRank: { width: 12, textAlign: "center", color: C.muted, fontSize: 7 },
@@ -521,12 +522,12 @@ export function TurneuPDF({
                 const isLast = si === slots.length - 1;
 
                 if (slot.kind === "eveniment") {
-                  const ev = slot.data;
-                  const icon = ev.tip === "festivitate_premiere" ? "★" : "●";
+                  const ev   = slot.data;
+                  const icon = ev.tip === "festivitate_premiere" ? "* " : "o ";
                   return (
                     <View key={ev.id} style={[s.cardEventRow, isLast ? { borderBottomWidth: 0 } : {}]}>
+                      <Text style={s.mEventLabel}>{icon}{sd(ev.titlu)}{icon.trimEnd()}</Text>
                       <Text style={s.mEventOra}>{ev.ora}</Text>
-                      <Text style={s.mEventLabel}>{icon}  {sd(ev.titlu)}</Text>
                     </View>
                   );
                 }

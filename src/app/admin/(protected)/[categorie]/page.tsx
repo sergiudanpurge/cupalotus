@@ -1,3 +1,4 @@
+import React from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
@@ -190,41 +191,106 @@ export default async function AdminCategoriePage({
               ? `Completați toate cele ${totalMeciuri - jucate} meciuri de grupă rămase, apoi generați meciurile de Duminică.`
               : "Apăsați butonul de mai sus pentru a genera meciurile eliminatorii."}
           </div>
-        ) : (
-          <div className="space-y-8">
-            {brackets.map((b) => {
-              const meciuriB = peeBracket[b];
-              const pStart = (b - 1) * 4 + 1;
-              const pEnd   = (b - 1) * 4 + 4;
-              return (
-                <div key={b}>
-                  <h3
-                    className="text-xs uppercase tracking-widest mb-3 flex items-center gap-2"
-                    style={{ color: "var(--color-cream-muted)" }}
-                  >
-                    <span
-                      className="text-xs font-bold px-2 py-0.5 rounded"
-                      style={{ background: "var(--color-gold)", color: "var(--color-bg)" }}
-                    >
-                      Bracket {b}
-                    </span>
-                    Locuri {pStart}–{pEnd}
+        ) : (() => {
+          // Separăm semifinalele de finale pentru fiecare bracket
+          const sfs     = eliminatorii.filter(m => m.cod?.startsWith("SF"));
+          const finals  = eliminatorii.filter(m => m.cod?.startsWith("F") || m.cod?.startsWith("B") || m.cod?.startsWith("FD"));
+          const sfBrk   = brackets.filter(b => sfs.some(m => m.bracket === b));
+          const finBrk  = brackets.filter(b => finals.some(m => m.bracket === b));
+          return (
+            <div className="space-y-8">
+              {/* ── SEMIFINALE ── */}
+              <div>
+                <h3 className="text-sm font-bold mb-4" style={{ fontFamily: "var(--font-oswald)", color: "var(--color-cream-muted)", letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                  I — Semifinale
+                </h3>
+                <div className="space-y-4">
+                  {sfBrk.map((b) => {
+                    const pStart = (b - 1) * 4 + 1;
+                    const pEnd   = (b - 1) * 4 + 4;
+                    const sfMeciuri = sfs.filter(m => m.bracket === b).sort((a, z) => (a.cod ?? "").localeCompare(z.cod ?? ""));
+                    return (
+                      <div key={b} className="rounded-xl border overflow-hidden" style={{ borderColor: "var(--color-border)", background: "var(--color-surface)" }}>
+                        <div className="px-4 py-2.5 border-b flex items-center gap-2" style={{ borderColor: "var(--color-border)" }}>
+                          <span className="font-bold text-sm" style={{ fontFamily: "var(--font-oswald)", color: "var(--color-cream)" }}>
+                            Semifinale — Locuri {pStart}–{pEnd}
+                          </span>
+                        </div>
+                        <div className="space-y-3 p-3">
+                          {sfMeciuri.map((m) => (
+                            <EliminatoriiEditCard
+                              key={m.id}
+                              meci={m}
+                              labelAcasa={slotLabel(m.refSlotAcasaTip, m.refSlotAcasaVal)}
+                              labelOaspete={slotLabel(m.refSlotOaspeteTip, m.refSlotOaspeteVal)}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* ── FINALE ── */}
+              {finals.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-bold mb-4" style={{ fontFamily: "var(--font-oswald)", color: "var(--color-cream-muted)", letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                    II — Finale
                   </h3>
                   <div className="space-y-3">
-                    {meciuriB.map((m) => (
-                      <EliminatoriiEditCard
-                        key={m.id}
-                        meci={m}
-                        labelAcasa={slotLabel(m.refSlotAcasaTip, m.refSlotAcasaVal)}
-                        labelOaspete={slotLabel(m.refSlotOaspeteTip, m.refSlotOaspeteVal)}
-                      />
-                    ))}
+                    {finBrk.flatMap((b) => {
+                      const pStart   = (b - 1) * 4 + 1;
+                      const pEnd     = (b - 1) * 4 + 4;
+                      const isFirst  = b === 1;
+                      const mFin     = finals.find(m => m.bracket === b && (m.cod?.startsWith("F") && !m.cod?.startsWith("FD")));
+                      const mBrnz    = finals.find(m => m.bracket === b && m.cod?.startsWith("B"));
+                      const mDir     = finals.find(m => m.bracket === b && m.cod?.startsWith("FD"));
+                      const result: React.ReactNode[] = [];
+                      if (mFin) result.push(
+                        <div key={`F${b}`} className="rounded-xl border overflow-hidden" style={{ borderColor: isFirst ? "var(--color-gold)" : "var(--color-border)", background: "var(--color-surface)" }}>
+                          <div className="px-4 py-2.5 border-b flex items-center gap-2" style={{ borderColor: isFirst ? "var(--color-gold)" : "var(--color-border)" }}>
+                            <span className="font-bold text-sm" style={{ fontFamily: "var(--font-oswald)", color: isFirst ? "var(--color-gold)" : "var(--color-cream)" }}>
+                              {isFirst ? "Finala Mare" : "Finala"} — Locuri {pStart}–{pStart + 1}
+                            </span>
+                          </div>
+                          <div className="p-3">
+                            <EliminatoriiEditCard meci={mFin} labelAcasa={slotLabel(mFin.refSlotAcasaTip, mFin.refSlotAcasaVal)} labelOaspete={slotLabel(mFin.refSlotOaspeteTip, mFin.refSlotOaspeteVal)} />
+                          </div>
+                        </div>
+                      );
+                      if (mBrnz) result.push(
+                        <div key={`B${b}`} className="rounded-xl border overflow-hidden" style={{ borderColor: "var(--color-border)", background: "var(--color-surface)" }}>
+                          <div className="px-4 py-2.5 border-b flex items-center gap-2" style={{ borderColor: "var(--color-border)" }}>
+                            <span className="font-bold text-sm" style={{ fontFamily: "var(--font-oswald)", color: "var(--color-cream)" }}>
+                              {isFirst ? "Finala Mică" : "Finala"} — Locuri {pStart + 2}–{pEnd}
+                            </span>
+                          </div>
+                          <div className="p-3">
+                            <EliminatoriiEditCard meci={mBrnz} labelAcasa={slotLabel(mBrnz.refSlotAcasaTip, mBrnz.refSlotAcasaVal)} labelOaspete={slotLabel(mBrnz.refSlotOaspeteTip, mBrnz.refSlotOaspeteVal)} />
+                          </div>
+                        </div>
+                      );
+                      if (mDir) result.push(
+                        <div key={`FD${b}`} className="rounded-xl border overflow-hidden" style={{ borderColor: "var(--color-gold)", background: "var(--color-surface)" }}>
+                          <div className="px-4 py-2.5 border-b flex items-center gap-2" style={{ borderColor: "var(--color-gold)" }}>
+                            <span className="font-bold text-sm" style={{ fontFamily: "var(--font-oswald)", color: "var(--color-gold)" }}>
+                              Finala — Locuri {pStart}–{pEnd}
+                            </span>
+                          </div>
+                          <div className="p-3">
+                            <EliminatoriiEditCard meci={mDir} labelAcasa={slotLabel(mDir.refSlotAcasaTip, mDir.refSlotAcasaVal)} labelOaspete={slotLabel(mDir.refSlotOaspeteTip, mDir.refSlotOaspeteVal)} />
+                          </div>
+                        </div>
+                      );
+                      return result;
+                    })}
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        )}
+              )}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

@@ -404,24 +404,22 @@ function ProgramView({
 
 // Card eveniment special (prezentare / festivitate)
 function EvenimentRow({ eveniment: e }: { eveniment: EvenimentSpecialRow }) {
-  const icon = e.tip === "festivitate_premiere" ? "🏆" : "⚽";
+  const icon        = e.tip === "festivitate_premiere" ? "🏆" : "⚽";
   const accentColor = e.tip === "festivitate_premiere" ? "var(--color-gold)" : "var(--color-cream-muted)";
 
   return (
     <div
-      className="px-3 py-3 flex items-center gap-3"
-      style={{ borderColor: "var(--color-border)", background: "rgba(217,165,68,0.04)" }}
+      className="py-3 px-4 flex flex-col items-center justify-center gap-0.5 text-center"
+      style={{ background: "rgba(217,165,68,0.04)" }}
     >
-      <span className="text-base flex-shrink-0">{icon}</span>
-      <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium" style={{ color: accentColor, fontFamily: "var(--font-oswald)" }}>
+      <div className="flex items-center justify-center gap-2">
+        <span className="text-base">{icon}</span>
+        <span className="text-sm font-bold" style={{ color: accentColor, fontFamily: "var(--font-oswald)" }}>
           {e.titlu}
-        </div>
+        </span>
+        <span className="text-base">{icon}</span>
       </div>
-      <span
-        className="text-xs font-medium flex-shrink-0"
-        style={{ color: "var(--color-gold)", fontFamily: "var(--font-oswald)" }}
-      >
+      <span className="text-xs font-medium" style={{ color: "var(--color-gold)", fontFamily: "var(--font-oswald)" }}>
         {e.ora}
       </span>
     </div>
@@ -522,10 +520,8 @@ function MeciRow({ meci: m }: { meci: MeciRow }) {
 }
 
 // ════════════════════════════════════════════════════════════
-// TAB: CALIFICĂRI — generalizat pentru N echipe per grupă
+// TAB: CALIFICĂRI — Semifinale grupate pe bracket, Finale separate
 // ════════════════════════════════════════════════════════════
-
-type SlotInfo = { echipaId?: string; nume: string };
 
 function CalificariView({
   clasamentA, clasamentB, meciuriEliminatorii,
@@ -535,201 +531,255 @@ function CalificariView({
   meciuriEliminatorii: MeciRow[];
 }) {
   const { t } = useTranslation();
-
-  // Map cod → meci pentru lookup rapid
-  const elimMap = new Map(meciuriEliminatorii.map(m => [m.cod, m]));
-
-  // N = numărul de echipe per grupă (poate fi diferit; folosim maximul)
-  const N = Math.max(clasamentA.length, clasamentB.length);
-  // Nr. de brackets = ceil(N/2): fiecare bracket acoperă 2 locuri per grupă
+  const N          = Math.max(clasamentA.length, clasamentB.length);
   const nrBrackets = Math.ceil(N / 2);
+  const elimMap    = new Map(meciuriEliminatorii.map(m => [m.cod, m]));
 
-  const slot = (grupa: "A" | "B", loc: number): SlotInfo => {
+  const slot = (grupa: "A" | "B", loc: number): string => {
     const cls = grupa === "A" ? clasamentA : clasamentB;
     const e   = cls[loc - 1];
-    return e ? { echipaId: e.echipaId, nume: e.nume } : { nume: `${t.podium.place} ${loc} Gr. ${grupa}` };
+    return e ? e.nume : `${t.podium.place} ${loc} Gr. ${grupa}`;
   };
-
-  // Generăm dinamic lista de brackets
-  const brackets = Array.from({ length: nrBrackets }, (_, b) => {
-    const r1         = b * 2 + 1;          // primul rang în bracket (1-based)
-    const r2         = b * 2 + 2;          // al doilea rang
-    const hasSFs     = r2 <= N;            // false dacă N e impar și suntem la ultimul bracket
-    const pStart     = b * 4 + 1;          // primul loc de podium al bracket-ului
-    const pEnd       = hasSFs ? b * 4 + 4 : b * 4 + 2;
-    const sfBase     = b * 2 + 1;          // numerotarea SF-urilor
-
-    return {
-      id: b + 1,
-      titlu: `${t.brackets.places} ${pStart}–${pEnd}`,
-      hasSFs,
-      // Cu semifinale (bracket complet de 4 echipe)
-      sf: hasSFs ? [
-        { cod: `SF${sfBase}`,   acasa: slot("A", r1), oaspete: slot("B", r2) },
-        { cod: `SF${sfBase+1}`, acasa: slot("B", r1), oaspete: slot("A", r2) },
-      ] : [],
-      finaleMare: hasSFs ? {
-        locuri: `${pStart}–${pStart + 1}`,
-        acasa:   `${t.brackets.winner} SF${sfBase}`,
-        oaspete: `${t.brackets.winner} SF${sfBase + 1}`,
-      } : null,
-      finaleMica: hasSFs ? {
-        locuri: `${pStart + 2}–${pEnd}`,
-        acasa:   `${t.brackets.loser} SF${sfBase}`,
-        oaspete: `${t.brackets.loser} SF${sfBase + 1}`,
-      } : null,
-      // Fără semifinale (doar o finală directă A vs B, pentru ultimul rang dacă N e impar)
-      directFinal: !hasSFs ? {
-        locuri: `${pStart}–${pEnd}`,
-        acasa:   slot("A", r1),
-        oaspete: slot("B", r1),
-      } : null,
-    };
-  });
 
   if (N === 0) {
     return <EmptyState text="Nu există echipe în această categorie." />;
   }
 
-  return (
-    <div className="space-y-6">
-      {brackets.map((b) => (
-        <div
-          key={b.id}
-          className="rounded-xl border overflow-hidden"
-          style={{ borderColor: "var(--color-border)", background: "var(--color-surface)" }}
-        >
-          {/* Header */}
-          <div className="px-4 py-3 border-b flex items-center gap-2" style={{ borderColor: "var(--color-border)" }}>
-            <span
-              className="text-xs font-bold px-2 py-0.5 rounded"
-              style={{ background: "var(--color-gold)", color: "var(--color-bg)" }}
-            >
-              {t.brackets.bracket} {b.id}
-            </span>
-            <span className="font-bold" style={{ fontFamily: "var(--font-oswald)", color: "var(--color-cream)" }}>
-              {b.titlu}
-            </span>
-          </div>
+  // Calculăm datele pentru fiecare bracket
+  const bracketsData = Array.from({ length: nrBrackets }, (_, bi) => {
+    const b      = bi + 1;
+    const r1     = bi * 2 + 1;
+    const r2     = bi * 2 + 2;
+    const hasSFs = r2 <= N;
+    const pStart = bi * 4 + 1;
+    const pEnd   = hasSFs ? bi * 4 + 4 : bi * 4 + 2;
+    const sfBase = bi * 2 + 1;
+    return { b, r1, r2, hasSFs, pStart, pEnd, sfBase };
+  });
 
-          {b.hasSFs ? (
-            /* Bracket complet: 2 semifinale + 2 finale */
-            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-3">
-                <div className="text-xs uppercase tracking-wider mb-2" style={{ color: "var(--color-cream-muted)" }}>
-                  {t.brackets.semifinals}
+  return (
+    <div className="space-y-8">
+
+      {/* ── SECȚIUNEA 1: SEMIFINALE ── */}
+      <div>
+        <h3
+          className="text-xs uppercase tracking-widest mb-4 flex items-center gap-2"
+          style={{ color: "var(--color-cream-muted)" }}
+        >
+          <span
+            className="text-xs font-bold px-2 py-0.5 rounded"
+            style={{ background: "rgba(217,165,68,0.15)", color: "var(--color-gold)" }}
+          >
+            I
+          </span>
+          {t.brackets.semifinals}
+        </h3>
+        <div className="space-y-4">
+          {bracketsData.filter(d => d.hasSFs).map(({ b, r1, r2, pStart, pEnd, sfBase }) => {
+            const sf1 = elimMap.get(`SF${sfBase}`);
+            const sf2 = elimMap.get(`SF${sfBase + 1}`);
+            return (
+              <div
+                key={b}
+                className="rounded-xl border overflow-hidden"
+                style={{ borderColor: "var(--color-border)", background: "var(--color-surface)" }}
+              >
+                <div className="px-4 py-2.5 border-b flex items-center gap-2" style={{ borderColor: "var(--color-border)" }}>
+                  <span className="font-bold text-sm" style={{ fontFamily: "var(--font-oswald)", color: "var(--color-cream)" }}>
+                    {t.brackets.semifinals} — {t.brackets.places} {pStart}–{pEnd}
+                  </span>
                 </div>
-                {b.sf.map((sf) => {
-                  const m = elimMap.get(sf.cod);
-                  return (
-                    <BracketMeci
-                      key={sf.cod}
-                      cod={sf.cod}
-                      acasa={m?.echipaAcasa?.nume ?? sf.acasa.nume}
-                      oaspete={m?.echipaOaspete?.nume ?? sf.oaspete.nume}
-                      meci={m}
-                    />
-                  );
-                })}
-              </div>
-              <div className="space-y-3">
-                <div className="text-xs uppercase tracking-wider mb-2" style={{ color: "var(--color-cream-muted)" }}>
-                  {t.brackets.finals}
-                </div>
-                {(() => {
-                  const sfBase = b.id * 2 - 1;
-                  const mFin  = elimMap.get(`F${b.id}`);
-                  const mBrnz = elimMap.get(`B${b.id}`);
-                  return (
-                    <>
-                      <BracketMeci
-                        cod={`${t.podium.place} ${b.finaleMare!.locuri}`}
-                        acasa={mFin?.echipaAcasa?.nume   ?? `${t.brackets.winner} SF${sfBase}`}
-                        oaspete={mFin?.echipaOaspete?.nume ?? `${t.brackets.winner} SF${sfBase + 1}`}
-                        isGold
-                        meci={mFin}
-                      />
-                      <BracketMeci
-                        cod={`${t.podium.place} ${b.finaleMica!.locuri}`}
-                        acasa={mBrnz?.echipaAcasa?.nume   ?? `${t.brackets.loser} SF${sfBase}`}
-                        oaspete={mBrnz?.echipaOaspete?.nume ?? `${t.brackets.loser} SF${sfBase + 1}`}
-                        meci={mBrnz}
-                      />
-                    </>
-                  );
-                })()}
-              </div>
-            </div>
-          ) : (
-            /* Finală directă (ultimul bracket cu N impar) */
-            <div className="p-4">
-              <div className="text-xs uppercase tracking-wider mb-3" style={{ color: "var(--color-cream-muted)" }}>
-                {t.brackets.finals}
-              </div>
-              {(() => {
-                const mFin = elimMap.get(`FD${b.id}`);
-                return (
+                <div className="divide-y" style={{ borderColor: "var(--color-border)" }}>
                   <BracketMeci
-                    cod={`${t.podium.place} ${b.directFinal!.locuri}`}
-                    acasa={mFin?.echipaAcasa?.nume ?? b.directFinal!.acasa.nume}
-                    oaspete={mFin?.echipaOaspete?.nume ?? b.directFinal!.oaspete.nume}
-                    isGold
-                    meci={mFin}
+                    codLabel={`SF${sfBase}`}
+                    acasa={sf1?.echipaAcasa?.nume  ?? slot("A", r1)}
+                    oaspete={sf1?.echipaOaspete?.nume ?? slot("B", r2)}
+                    meci={sf1}
                   />
-                );
-              })()}
-            </div>
-          )}
+                  <BracketMeci
+                    codLabel={`SF${sfBase + 1}`}
+                    acasa={sf2?.echipaAcasa?.nume  ?? slot("B", r1)}
+                    oaspete={sf2?.echipaOaspete?.nume ?? slot("A", r2)}
+                    meci={sf2}
+                  />
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Finale directe (când N e impar — ultimul bracket fără SFs) */}
+          {bracketsData.filter(d => !d.hasSFs).map(({ b, r1, pStart, pEnd }) => {
+            const mDir = elimMap.get(`FD${b}`);
+            return (
+              <div
+                key={b}
+                className="rounded-xl border overflow-hidden"
+                style={{ borderColor: "var(--color-gold)", background: "var(--color-surface)" }}
+              >
+                <div className="px-4 py-2.5 border-b flex items-center gap-2" style={{ borderColor: "var(--color-gold)" }}>
+                  <span className="font-bold text-sm" style={{ fontFamily: "var(--font-oswald)", color: "var(--color-gold)" }}>
+                    {t.brackets.final} — {t.brackets.places} {pStart}–{pEnd}
+                  </span>
+                </div>
+                <BracketMeci
+                  codLabel={`${t.brackets.places} ${pStart}–${pEnd}`}
+                  acasa={mDir?.echipaAcasa?.nume  ?? slot("A", r1)}
+                  oaspete={mDir?.echipaOaspete?.nume ?? slot("B", r1)}
+                  isGold
+                  meci={mDir}
+                />
+              </div>
+            );
+          })}
         </div>
-      ))}
+      </div>
+
+      {/* ── SECȚIUNEA 2: FINALE ── */}
+      <div>
+        <h3
+          className="text-xs uppercase tracking-widest mb-4 flex items-center gap-2"
+          style={{ color: "var(--color-cream-muted)" }}
+        >
+          <span
+            className="text-xs font-bold px-2 py-0.5 rounded"
+            style={{ background: "rgba(217,165,68,0.15)", color: "var(--color-gold)" }}
+          >
+            II
+          </span>
+          {t.brackets.finals}
+        </h3>
+        <div className="space-y-3">
+          {bracketsData.filter(d => d.hasSFs).flatMap(({ b, pStart, pEnd, sfBase }) => {
+            const mFin  = elimMap.get(`F${b}`);
+            const mBrnz = elimMap.get(`B${b}`);
+            const isFirst = b === 1;
+            return [
+              <div
+                key={`F${b}`}
+                className="rounded-xl border overflow-hidden"
+                style={{ borderColor: isFirst ? "var(--color-gold)" : "var(--color-border)", background: "var(--color-surface)" }}
+              >
+                <div
+                  className="px-4 py-2.5 border-b flex items-center gap-2"
+                  style={{ borderColor: isFirst ? "var(--color-gold)" : "var(--color-border)" }}
+                >
+                  <span className="font-bold text-sm" style={{ fontFamily: "var(--font-oswald)", color: isFirst ? "var(--color-gold)" : "var(--color-cream)" }}>
+                    {isFirst ? t.brackets.grandFinal : t.brackets.final} — {t.brackets.places} {pStart}–{pStart + 1}
+                  </span>
+                </div>
+                <BracketMeci
+                  codLabel={`${t.brackets.places} ${pStart}–${pStart + 1}`}
+                  acasa={mFin?.echipaAcasa?.nume  ?? `${t.brackets.winner} SF${sfBase}`}
+                  oaspete={mFin?.echipaOaspete?.nume ?? `${t.brackets.winner} SF${sfBase + 1}`}
+                  isGold={isFirst}
+                  meci={mFin}
+                />
+              </div>,
+              <div
+                key={`B${b}`}
+                className="rounded-xl border overflow-hidden"
+                style={{ borderColor: "var(--color-border)", background: "var(--color-surface)" }}
+              >
+                <div className="px-4 py-2.5 border-b flex items-center gap-2" style={{ borderColor: "var(--color-border)" }}>
+                  <span className="font-bold text-sm" style={{ fontFamily: "var(--font-oswald)", color: "var(--color-cream)" }}>
+                    {isFirst ? t.brackets.smallFinal : t.brackets.final} — {t.brackets.places} {pStart + 2}–{pEnd}
+                  </span>
+                </div>
+                <BracketMeci
+                  codLabel={`${t.brackets.places} ${pStart + 2}–${pEnd}`}
+                  acasa={mBrnz?.echipaAcasa?.nume  ?? `${t.brackets.loser} SF${sfBase}`}
+                  oaspete={mBrnz?.echipaOaspete?.nume ?? `${t.brackets.loser} SF${sfBase + 1}`}
+                  meci={mBrnz}
+                />
+              </div>,
+            ];
+          })}
+        </div>
+      </div>
+
     </div>
   );
 }
 
 function BracketMeci({
-  cod, acasa, oaspete, isGold = false, meci,
+  codLabel, acasa, oaspete, isGold = false, meci,
 }: {
-  cod: string; acasa: string; oaspete: string; isGold?: boolean; meci?: MeciRow;
+  codLabel: string; acasa: string; oaspete: string; isGold?: boolean; meci?: MeciRow;
 }) {
-  const jucat    = meci?.jucat && meci.scorAcasa != null;
+  const { t } = useTranslation();
+  const jucat     = meci?.jucat && meci.scorAcasa != null;
   const egalitate = jucat && meci!.scorAcasa === meci!.scorOaspete;
-  const hasPen   = egalitate && meci!.penaltyAcasa != null;
+  const hasPen    = egalitate && meci!.penaltyAcasa != null;
 
   return (
-    <div
-      className="rounded-lg p-3 border"
-      style={{
-        borderColor: isGold ? "var(--color-gold)" : jucat ? "rgba(74,222,128,0.2)" : "var(--color-border)",
-        background: "var(--color-surface-2)",
-      }}
-    >
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-xs font-medium" style={{ color: isGold ? "var(--color-gold)" : "var(--color-cream-muted)" }}>
-          {cod}
+    <div className="px-3 py-2.5" style={{ borderColor: "var(--color-border)" }}>
+      {/* Rând meta: oră · teren · badge fază */}
+      <div className="flex items-center gap-2 mb-1.5">
+        {meci?.ora && (
+          <>
+            <span className="text-xs font-medium" style={{ fontFamily: "var(--font-oswald)", color: "var(--color-gold)" }}>
+              {meci.ora}
+            </span>
+            <span className="text-xs" style={{ color: "var(--color-border)" }}>·</span>
+            <span className="text-xs" style={{ color: "var(--color-cream-muted)" }}>
+              {formatTeren(meci.teren, t.schedule.fieldPrefix)}
+            </span>
+            <span className="text-xs" style={{ color: "var(--color-border)" }}>·</span>
+          </>
+        )}
+        <span
+          className="text-xs px-1.5 py-0.5 rounded font-medium"
+          style={{
+            background: isGold ? "rgba(217,165,68,0.12)" : "var(--color-surface-2)",
+            color:      isGold ? "var(--color-gold)"       : "var(--color-cream-muted)",
+          }}
+        >
+          {codLabel}
         </span>
         {jucat && (
-          <span className="text-xs px-1.5 py-0.5 rounded ml-auto" style={{ background: "var(--color-green-rank)", color: "var(--color-green-rank-text)" }}>
-            Final
-          </span>
-        )}
-      </div>
-      <div className="flex items-center gap-2 text-sm">
-        <span className="flex-1 truncate" style={{ color: "var(--color-cream)" }}>{acasa}</span>
-        {jucat ? (
           <span
-            className="text-sm font-bold flex-shrink-0 px-2 py-0.5 rounded tabular-nums"
-            style={{ fontFamily: "var(--font-oswald)", background: "var(--color-surface)", color: "var(--color-cream)" }}
+            className="ml-auto text-xs px-1.5 py-0.5 rounded"
+            style={{ background: "var(--color-green-rank)", color: "var(--color-green-rank-text)" }}
           >
-            {meci!.scorAcasa} – {meci!.scorOaspete}
+            {t.schedule.fullTime}
           </span>
-        ) : (
-          <span className="text-xs flex-shrink-0 px-2 py-0.5 rounded" style={{ background: "var(--color-border)", color: "var(--color-cream-muted)" }}>vs</span>
         )}
-        <span className="flex-1 truncate text-right" style={{ color: "var(--color-cream)" }}>{oaspete}</span>
       </div>
+
+      {/* Echipe + scor */}
+      <div className="flex items-center gap-2 min-w-0">
+        <span className="flex-1 text-sm font-medium truncate" style={{ color: "var(--color-cream)" }}>{acasa}</span>
+        <div
+          className="flex-shrink-0 flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-sm font-bold tabular-nums"
+          style={{
+            fontFamily:     "var(--font-oswald)",
+            background:     jucat ? "var(--color-surface-2)" : "transparent",
+            color:          jucat ? "var(--color-cream)"      : "var(--color-cream-muted)",
+            border:         jucat ? "none" : "1px solid var(--color-border)",
+            minWidth:       "3.5rem",
+            justifyContent: "center",
+          }}
+        >
+          {jucat ? (
+            <>
+              <span style={{ color: meci!.scorAcasa! > meci!.scorOaspete! ? "var(--color-cream)" : "var(--color-cream-muted)" }}>
+                {meci!.scorAcasa}
+              </span>
+              <span style={{ color: "var(--color-border)" }}>–</span>
+              <span style={{ color: meci!.scorOaspete! > meci!.scorAcasa! ? "var(--color-cream)" : "var(--color-cream-muted)" }}>
+                {meci!.scorOaspete}
+              </span>
+            </>
+          ) : (
+            <span className="text-xs">vs</span>
+          )}
+        </div>
+        <span className="flex-1 text-sm font-medium truncate text-right" style={{ color: "var(--color-cream)" }}>{oaspete}</span>
+      </div>
+
       {hasPen && (
         <div className="mt-1 text-xs text-center" style={{ color: "var(--color-cream-muted)" }}>
-          pen. {meci!.penaltyAcasa} – {meci!.penaltyOaspete}
+          {t.schedule.pen} {meci!.penaltyAcasa} – {meci!.penaltyOaspete}
         </div>
       )}
     </div>

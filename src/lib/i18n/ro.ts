@@ -55,6 +55,9 @@ export type Dict = {
     winner:     string;
     loser:      string;
     bracket:    string;
+    grandFinal: string;
+    smallFinal: string;
+    final:      string;
   };
   scorers: {
     player:  string;
@@ -128,6 +131,9 @@ export const ro: Dict = {
     winner:     "Câșg.",
     loser:      "Înv.",
     bracket:    "Tablou",
+    grandFinal: "Finala Mare",
+    smallFinal: "Finala Mică",
+    final:      "Finala",
   },
   scorers: {
     player:  "Jucător",

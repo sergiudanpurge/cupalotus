@@ -57,6 +57,9 @@ export const en: Dict = {
     winner:     "W.",
     loser:      "L.",
     bracket:    "Bracket",
+    grandFinal: "Grand Final",
+    smallFinal: "3rd Place Final",
+    final:      "Final",
   },
   scorers: {
     player:  "Player",
