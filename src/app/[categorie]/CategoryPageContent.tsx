@@ -560,6 +560,22 @@ function CalificariView({
   return (
     <div className="space-y-8">
 
+      {/* Banner Duminică */}
+      <div
+        className="flex items-center gap-3 rounded-xl px-4 py-3"
+        style={{ background: "rgba(217,165,68,0.08)", border: "1px solid rgba(217,165,68,0.2)" }}
+      >
+        <span className="text-lg">📅</span>
+        <div>
+          <div className="text-sm font-bold" style={{ fontFamily: "var(--font-oswald)", color: "var(--color-gold)" }}>
+            {t.schedule["Duminică"]}
+          </div>
+          <div className="text-xs" style={{ color: "var(--color-cream-muted)" }}>
+            {t.brackets.semifinals} &amp; {t.brackets.finals}
+          </div>
+        </div>
+      </div>
+
       {/* ── SECȚIUNEA 1: SEMIFINALE ── */}
       <div>
         <h3
