@@ -21,7 +21,7 @@ export const en: Dict = {
     backToCategories: "← Categories",
   },
   tabs: {
-    clasament:  "Standings",
+    clasament:  "Groups",
     program:    "Schedule",
     calificari: "Knockouts",
     golgheteri: "Top Scorers",

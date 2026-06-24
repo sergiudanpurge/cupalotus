@@ -95,10 +95,10 @@ export const ro: Dict = {
     backToCategories: "← Categorii",
   },
   tabs: {
-    clasament:  "Clasament",
+    clasament:  "Grupe",
     program:    "Program",
     calificari: "Calificări",
-    golgheteri: "Golgheteri",
+    golgheteri: "Goluri",
     podium:     "Podium",
   },
   standings: {

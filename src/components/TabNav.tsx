@@ -20,7 +20,7 @@ export function TabNav() {
 
   return (
     <div
-      className="flex gap-1 overflow-x-auto pb-px scrollbar-none"
+      className="flex pb-px"
       style={{ borderBottom: "1px solid var(--color-border)" }}
     >
       {TABS.map(({ id, label }) => {
@@ -30,7 +30,7 @@ export function TabNav() {
             key={id}
             href={`${pathname}?tab=${id}`}
             scroll={false}
-            className="whitespace-nowrap px-4 py-2.5 text-sm font-medium transition-colors relative"
+            className="flex-1 text-center whitespace-nowrap px-1 py-2 text-xs sm:text-sm font-medium transition-colors relative"
             style={{
               fontFamily: "var(--font-inter)",
               color: isActive ? "var(--color-gold)" : "var(--color-cream-muted)",

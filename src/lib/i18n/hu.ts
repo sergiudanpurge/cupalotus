@@ -21,7 +21,7 @@ export const hu: Dict = {
     backToCategories: "← Kategóriák",
   },
   tabs: {
-    clasament:  "Tabella",
+    clasament:  "Csoportok",
     program:    "Program",
     calificari: "Rájátszás",
     golgheteri: "Góllövők",
