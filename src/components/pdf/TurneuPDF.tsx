@@ -221,6 +221,33 @@ const s = StyleSheet.create({
   scorerNo:    { width: 26, textAlign: "center" },
   scorerEchipa:{ flex: 1, color: C.muted },
   scorerGoluri:{ width: 28, textAlign: "center", fontFamily: "Helvetica-Bold", color: C.gold },
+  // ── Clasament Final ──
+  finalRow: {
+    flexDirection: "row",
+    paddingHorizontal: 5,
+    paddingVertical: 3,
+    borderBottomWidth: 0.5,
+    borderColor: C.border,
+    borderLeftWidth: 0.5,
+    borderRightWidth: 0.5,
+    alignItems: "center",
+  },
+  finalRowTop3: {
+    flexDirection: "row",
+    paddingHorizontal: 5,
+    paddingVertical: 3,
+    backgroundColor: C.bgGold,
+    borderBottomWidth: 0.5,
+    borderColor: C.border,
+    borderLeftWidth: 0.5,
+    borderRightWidth: 0.5,
+    alignItems: "center",
+  },
+  finalRank: { width: 22, textAlign: "center", color: C.muted, fontSize: 7 },
+  finalRankGold: { width: 22, textAlign: "center", fontFamily: "Helvetica-Bold", color: C.gold, fontSize: 9 },
+  finalNume: { flex: 1 },
+  finalNumeBold: { flex: 1, fontFamily: "Helvetica-Bold" },
+  finalNumeMuted: { flex: 1, color: C.muted },
   // ── Footer ──
   footer: {
     position: "absolute",
@@ -281,15 +308,27 @@ export type PDFEvenimentRow = {
   ora:   string;
 };
 
+export type PDFEliminatoriuRow = {
+  cod:            string | null;
+  jucat:          boolean;
+  scorAcasa:      number | null;
+  scorOaspete:    number | null;
+  penaltyAcasa:   number | null;
+  penaltyOaspete: number | null;
+  echipaAcasa:    { id: string; nume: string } | null;
+  echipaOaspete:  { id: string; nume: string } | null;
+};
+
 export type TurneuPDFProps = {
-  categorie:          { id: string; nume: string; anNastere: number };
-  clasamentA:         PDFClassamentRow[];
-  clasamentB:         PDFClassamentRow[];
-  meciuri:            PDFMeciRow[];
-  golgheteri:         PDFGolgheterRow[];
-  echipaMap:          Record<string, string>;
-  evenimenteSpeciale: PDFEvenimentRow[];
-  generatLa:          string;
+  categorie:            { id: string; nume: string; anNastere: number };
+  clasamentA:           PDFClassamentRow[];
+  clasamentB:           PDFClassamentRow[];
+  meciuri:              PDFMeciRow[];
+  meciuriEliminatorii:  PDFEliminatoriuRow[];
+  golgheteri:           PDFGolgheterRow[];
+  echipaMap:            Record<string, string>;
+  evenimenteSpeciale:   PDFEvenimentRow[];
+  generatLa:            string;
 };
 
 // ── Sub-componente PDF ────────────────────────────────────────
@@ -362,6 +401,64 @@ function ClassamentTable({ titlu, clasament }: { titlu: string; clasament: PDFCl
   );
 }
 
+// ── Helpers clasament final ───────────────────────────────────
+
+function elimWinner(m: PDFEliminatoriuRow | undefined): string | null {
+  if (!m?.jucat || m.scorAcasa == null || m.scorOaspete == null) return null;
+  if (m.scorAcasa > m.scorOaspete)  return m.echipaAcasa?.nume  ?? null;
+  if (m.scorOaspete > m.scorAcasa)  return m.echipaOaspete?.nume ?? null;
+  if (m.penaltyAcasa != null && m.penaltyOaspete != null) {
+    return m.penaltyAcasa > m.penaltyOaspete ? m.echipaAcasa?.nume ?? null : m.echipaOaspete?.nume ?? null;
+  }
+  return null;
+}
+
+function elimLoser(m: PDFEliminatoriuRow | undefined): string | null {
+  if (!m?.jucat || m.scorAcasa == null || m.scorOaspete == null) return null;
+  if (m.scorAcasa < m.scorOaspete)  return m.echipaAcasa?.nume  ?? null;
+  if (m.scorOaspete < m.scorAcasa)  return m.echipaOaspete?.nume ?? null;
+  if (m.penaltyAcasa != null && m.penaltyOaspete != null) {
+    return m.penaltyAcasa < m.penaltyOaspete ? m.echipaAcasa?.nume ?? null : m.echipaOaspete?.nume ?? null;
+  }
+  return null;
+}
+
+function calculeazaClasamentFinal(
+  eliminatorii: PDFEliminatoriuRow[],
+  clasamentA: PDFClassamentRow[],
+  clasamentB: PDFClassamentRow[],
+): { place: number; team: string | null }[] {
+  const N = Math.max(clasamentA.length, clasamentB.length);
+  if (N === 0) return [];
+
+  const nrBrackets = Math.ceil(N / 2);
+  const elimMap = new Map(eliminatorii.map(m => [m.cod, m]));
+  const ranking: { place: number; team: string | null }[] = [];
+
+  for (let bi = 0; bi < nrBrackets; bi++) {
+    const r1     = bi * 2 + 1;
+    const r2     = bi * 2 + 2;
+    const hasSFs = r2 <= N;
+    const pBase  = bi * 4;
+    const b      = bi + 1;
+
+    if (hasSFs) {
+      const mFin  = elimMap.get(`F${b}`);
+      const mBrnz = elimMap.get(`B${b}`);
+      ranking.push({ place: pBase + 1, team: elimWinner(mFin) });
+      ranking.push({ place: pBase + 2, team: elimLoser(mFin) });
+      ranking.push({ place: pBase + 3, team: elimWinner(mBrnz) });
+      ranking.push({ place: pBase + 4, team: elimLoser(mBrnz) });
+    } else {
+      const mDir = elimMap.get(`FD${b}`);
+      ranking.push({ place: pBase + 1, team: elimWinner(mDir) });
+      ranking.push({ place: pBase + 2, team: elimLoser(mDir) });
+    }
+  }
+
+  return ranking;
+}
+
 // ── Documentul PDF principal ──────────────────────────────────
 
 export function TurneuPDF({
@@ -369,6 +466,7 @@ export function TurneuPDF({
   clasamentA,
   clasamentB,
   meciuri,
+  meciuriEliminatorii,
   golgheteri,
   echipaMap,
   evenimenteSpeciale,
@@ -378,6 +476,7 @@ export function TurneuPDF({
   const peZile        = grupaMeciuriPeZile(meciuriGrupa);
   const evPeZile      = grupaEvenimentePeZile(evenimenteSpeciale);
   const top10         = golgheteri.slice(0, 10);
+  const clasamentFinal = calculeazaClasamentFinal(meciuriEliminatorii, clasamentA, clasamentB);
 
   const jucate = meciuriGrupa.filter((m) => m.jucat).length;
   const total  = meciuriGrupa.length;
@@ -498,6 +597,31 @@ export function TurneuPDF({
                 <Text style={s.scorerGoluri}>{g.goluri}</Text>
               </View>
             ))}
+          </>
+        )}
+
+        {/* ── Clasament Final ────────────────────────────────── */}
+        {clasamentFinal.length > 0 && (
+          <>
+            <View style={s.dividerThin} />
+            <Text style={s.sectionTitle}>Clasament Final</Text>
+
+            <View style={[s.tableHeader, { marginBottom: 0 }]}>
+              <Text style={s.finalRank}>Loc</Text>
+              <Text style={s.finalNume}>Echipa</Text>
+            </View>
+
+            {clasamentFinal.map(({ place, team }) => {
+              const isTop3 = place <= 3;
+              return (
+                <View key={place} style={isTop3 ? s.finalRowTop3 : s.finalRow}>
+                  <Text style={isTop3 ? s.finalRankGold : s.finalRank}>{place}</Text>
+                  <Text style={team ? (isTop3 ? s.finalNumeBold : s.finalNume) : s.finalNumeMuted}>
+                    {team ? sd(team) : "—"}
+                  </Text>
+                </View>
+              );
+            })}
           </>
         )}
 

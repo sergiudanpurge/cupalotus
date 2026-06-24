@@ -952,7 +952,7 @@ function PodiumView({
                 background: isFirst ? "rgba(217,165,68,0.12)" : "transparent",
               }}
             >
-              {isFirst && team && <ConfettiRain />}
+              {isFirst && <ConfettiRain />}
 
               {/* Rank badge */}
               <span

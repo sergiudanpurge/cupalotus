@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { calculeazaClasament, calculeazaGolgheteri } from "@/lib/turneu";
 import { renderToBuffer } from "@react-pdf/renderer";
-import { TurneuPDF, type PDFMeciRow, type PDFEvenimentRow } from "@/components/pdf/TurneuPDF";
+import { TurneuPDF, type PDFMeciRow, type PDFEvenimentRow, type PDFEliminatoriuRow } from "@/components/pdf/TurneuPDF";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     return new NextResponse("Categoria nu există.", { status: 404 });
   }
 
-  const [echipeA, echipeB, meciuri, evenimenteSpeciale] = await Promise.all([
+  const [echipeA, echipeB, meciuri, eliminatorii, evenimenteSpeciale] = await Promise.all([
     prisma.echipa.findMany({ where: { categorieId: catId, grupa: "A" }, orderBy: { id: "asc" } }),
     prisma.echipa.findMany({ where: { categorieId: catId, grupa: "B" }, orderBy: { id: "asc" } }),
     prisma.meci.findMany({
@@ -41,6 +41,14 @@ export async function GET(request: NextRequest) {
       },
       orderBy: [{ ziua: "asc" }, { ora: "asc" }],
     }) as unknown as PDFMeciRow[],
+    prisma.meci.findMany({
+      where: { categorieId: catId, faza: "eliminatorii" },
+      include: {
+        echipaAcasa:   { select: { id: true, nume: true } },
+        echipaOaspete: { select: { id: true, nume: true } },
+      },
+      orderBy: [{ bracket: "asc" }, { cod: "asc" }],
+    }) as unknown as PDFEliminatoriuRow[],
     prisma.evenimentSpecial.findMany({
       where: { categorieId: catId, activ: true },
       orderBy: [{ ziua: "asc" }, { ora: "asc" }],
@@ -69,6 +77,7 @@ export async function GET(request: NextRequest) {
     clasamentA={clasamentA}
     clasamentB={clasamentB}
     meciuri={meciuri}
+    meciuriEliminatorii={eliminatorii}
     golgheteri={golgheteri}
     echipaMap={echipaMap}
     evenimenteSpeciale={evenimenteSpeciale}
