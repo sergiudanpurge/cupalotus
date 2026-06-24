@@ -46,34 +46,6 @@ export function SiteNav() {
       {/* Butoane limbă */}
       <LanguageSelector />
 
-      {/* Separator vizual */}
-      <div className="h-4 w-px flex-shrink-0" style={{ background: "var(--color-border)" }} />
-
-      {/* Comutator Vizitatori / Admin */}
-      <div className="flex items-center gap-1">
-        <span
-          className="px-2.5 py-1 rounded-lg text-xs font-bold"
-          style={{
-            background: "var(--color-gold)",
-            color: "var(--color-bg)",
-            border: "1px solid transparent",
-          }}
-        >
-          <span className="hidden sm:inline">Vizitatori</span>
-          <span className="sm:hidden">Viz.</span>
-        </span>
-        <Link
-          href="/admin"
-          className="px-2.5 py-1 rounded-lg text-xs font-bold transition-all hover:border-[var(--color-gold)] hover:text-[var(--color-gold)]"
-          style={{
-            background: "transparent",
-            color: "var(--color-cream-muted)",
-            border: "1px solid var(--color-border)",
-          }}
-        >
-          Admin
-        </Link>
-      </div>
     </header>
   );
 }
