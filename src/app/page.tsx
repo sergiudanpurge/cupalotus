@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { TournamentBanner } from "@/components/TournamentBanner";
 import { HomeCategorySection } from "./HomeCategorySection";
 
-export const revalidate = 30;
+export const dynamic = "force-dynamic";
 
 async function getCategoriiCuProgres() {
   const categorii = await prisma.categorieVarsta.findMany({
