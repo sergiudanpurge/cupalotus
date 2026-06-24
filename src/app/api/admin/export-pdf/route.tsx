@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { calculeazaClasament, calculeazaGolgheteri } from "@/lib/turneu";
 import { renderToBuffer } from "@react-pdf/renderer";
-import { TurneuPDF, type PDFMeciRow, type PDFEvenimentRow, type PDFEliminatoriuRow } from "@/components/pdf/TurneuPDF";
+import { TurneuPDF, type PDFMeciRow, type PDFEvenimentRow } from "@/components/pdf/TurneuPDF";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,46 +21,41 @@ export async function GET(request: NextRequest) {
   const catId = searchParams.get("categorie");
 
   if (!catId) {
-    return new NextResponse("Parametrul 'categorie' lipsește.", { status: 400 });
+    return new NextResponse("Parametrul 'categorie' lipseste.", { status: 400 });
   }
 
   // ── Date din DB ─────────────────────────────────────────────
   const categorie = await prisma.categorieVarsta.findUnique({ where: { id: catId } });
   if (!categorie) {
-    return new NextResponse("Categoria nu există.", { status: 404 });
+    return new NextResponse("Categoria nu exista.", { status: 404 });
   }
 
-  const [echipeA, echipeB, meciuri, eliminatorii, evenimenteSpeciale] = await Promise.all([
+  // Aducem TOATE meciurile (grupe + eliminatorii) pentru program complet
+  const [echipeA, echipeB, meciuri, evenimenteSpeciale] = await Promise.all([
     prisma.echipa.findMany({ where: { categorieId: catId, grupa: "A" }, orderBy: { id: "asc" } }),
     prisma.echipa.findMany({ where: { categorieId: catId, grupa: "B" }, orderBy: { id: "asc" } }),
     prisma.meci.findMany({
-      where: { categorieId: catId, faza: "grupa" },
+      where: { categorieId: catId },
       include: {
         echipaAcasa:   { select: { id: true, nume: true, grupa: true } },
         echipaOaspete: { select: { id: true, nume: true, grupa: true } },
       },
       orderBy: [{ ziua: "asc" }, { ora: "asc" }],
     }) as unknown as PDFMeciRow[],
-    prisma.meci.findMany({
-      where: { categorieId: catId, faza: "eliminatorii" },
-      include: {
-        echipaAcasa:   { select: { id: true, nume: true } },
-        echipaOaspete: { select: { id: true, nume: true } },
-      },
-      orderBy: [{ bracket: "asc" }, { cod: "asc" }],
-    }) as unknown as PDFEliminatoriuRow[],
     prisma.evenimentSpecial.findMany({
       where: { categorieId: catId, activ: true },
       orderBy: [{ ziua: "asc" }, { ora: "asc" }],
     }) as unknown as PDFEvenimentRow[],
   ]);
 
-  const meciuriA = meciuri.filter((m) => m.grupa === "A");
-  const meciuriB = meciuri.filter((m) => m.grupa === "B");
+  // Clasamentul de grupe se calculeaza doar din meciurile de grupe
+  const meciuriGrupa = meciuri.filter((m) => m.faza === "grupa");
+  const meciuriA = meciuriGrupa.filter((m) => m.grupa === "A");
+  const meciuriB = meciuriGrupa.filter((m) => m.grupa === "B");
 
   const clasamentA  = calculeazaClasament(echipeA, meciuriA);
   const clasamentB  = calculeazaClasament(echipeB, meciuriB);
-  const golgheteri  = calculeazaGolgheteri(meciuri);
+  const golgheteri  = calculeazaGolgheteri(meciuriGrupa);
   const echipaMap: Record<string, string> = Object.fromEntries(
     [...echipeA, ...echipeB].map((e) => [e.id, e.nume])
   );
@@ -77,7 +72,6 @@ export async function GET(request: NextRequest) {
     clasamentA={clasamentA}
     clasamentB={clasamentB}
     meciuri={meciuri}
-    meciuriEliminatorii={eliminatorii}
     golgheteri={golgheteri}
     echipaMap={echipaMap}
     evenimenteSpeciale={evenimenteSpeciale}

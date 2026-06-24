@@ -15,8 +15,8 @@ const C = {
   dark:     "#1a1a1a",
   muted:    "#666666",
   border:   "#e0e0e0",
-  bgLight:  "#f9f8f6",
   bgGold:   "#fdf8ec",
+  bgHead:   "#f0e8d0",
   bgBanner: "#0b0a07",
   green:    "#166534",
   bgGreen:  "#dcfce7",
@@ -57,7 +57,6 @@ const s = StyleSheet.create({
     marginLeft: -32,
     marginRight: -32,
     marginBottom: 14,
-    padding: 0,
     position: "relative",
   },
   bannerImg: {
@@ -88,12 +87,6 @@ const s = StyleSheet.create({
     marginTop: 3,
     opacity: 0.85,
   },
-  bannerMeta: {
-    fontSize: 7,
-    color: "#dcc89b",
-    marginTop: 2,
-    opacity: 0.65,
-  },
   // ── Subtitlu pagina ──
   pageSubtitle: {
     flexDirection: "row",
@@ -113,13 +106,6 @@ const s = StyleSheet.create({
     fontSize: 7.5,
     color: C.muted,
   },
-  // ── Linie despărțitoare ──
-  dividerThin: {
-    height: 0.5,
-    backgroundColor: C.border,
-    marginBottom: 8,
-    marginTop: 8,
-  },
   // ── Secțiuni ──
   sectionTitle: {
     fontSize: 9,
@@ -128,126 +114,113 @@ const s = StyleSheet.create({
     letterSpacing: 1.2,
     textTransform: "uppercase",
     marginBottom: 5,
-    marginTop: 8,
+    marginTop: 10,
+  },
+  divider: {
+    height: 0.5,
+    backgroundColor: C.border,
+    marginTop: 10,
+    marginBottom: 2,
   },
   row: { flexDirection: "row", gap: 10 },
   col: { flex: 1 },
-  // ── Tabel clasament ──
-  tableHeader: {
-    flexDirection: "row",
-    backgroundColor: C.bgGold,
-    borderTopLeftRadius: 3,
-    borderTopRightRadius: 3,
-    paddingHorizontal: 5,
-    paddingVertical: 3.5,
+
+  // ── Card rotunjit (container general) ──
+  card: {
+    borderRadius: 5,
+    overflow: "hidden",
     borderWidth: 0.5,
     borderColor: C.border,
+    marginBottom: 7,
   },
-  tableRow: {
+  // Header card (ziua / titlu tabel)
+  cardHead: {
     flexDirection: "row",
-    paddingHorizontal: 5,
-    paddingVertical: 3,
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: C.bgHead,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
     borderBottomWidth: 0.5,
     borderColor: C.border,
-    borderLeftWidth: 0.5,
-    borderRightWidth: 0.5,
   },
-  tableRowGreen: {
-    flexDirection: "row",
-    paddingHorizontal: 5,
-    paddingVertical: 3,
-    backgroundColor: C.bgGreen,
-    borderBottomWidth: 0.5,
-    borderColor: C.border,
-    borderLeftWidth: 0.5,
-    borderRightWidth: 0.5,
-  },
-  // Celule clasament
-  cRank: { width: 12, textAlign: "center", color: C.muted, fontSize: 7 },
-  cNume: { flex: 1 },
-  cStat: { width: 16, textAlign: "center", color: C.muted, fontSize: 7 },
-  cPct:  { width: 18, textAlign: "center", fontFamily: "Helvetica-Bold", color: C.gold, fontSize: 7.5 },
-  // Grup header
-  grupaHeader: {
-    fontSize: 7.5,
+  cardHeadText: {
+    fontSize: 8,
     fontFamily: "Helvetica-Bold",
     color: C.dark,
-    marginBottom: 3,
-  },
-  // ── Program meciuri ──
-  dayHeader: {
-    fontSize: 7.5,
-    fontFamily: "Helvetica-Bold",
-    color: C.dark,
-    textTransform: "uppercase",
     letterSpacing: 0.8,
-    marginTop: 5,
-    marginBottom: 3,
   },
-  matchRow: {
+  cardHeadSub: {
+    fontSize: 6.5,
+    color: C.muted,
+  },
+  // Rand comun in card
+  cardRow: {
     flexDirection: "row",
-    paddingVertical: 2.5,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderBottomWidth: 0.5,
     borderColor: C.border,
     alignItems: "center",
   },
-  matchOra:    { width: 26, color: C.muted },
-  matchTeren:  { width: 20, color: C.muted },
-  matchGrupa:  { width: 20, color: C.muted },
-  matchEchipa: { flex: 1 },
-  matchScore:  { width: 28, textAlign: "center", fontFamily: "Helvetica-Bold" },
-  matchPen:    { width: 34, textAlign: "center", color: C.muted, fontSize: 6.5 },
-  // ── Eveniment special ──
-  eventRow: {
+  cardRowGold: {
     flexDirection: "row",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderBottomWidth: 0.5,
+    borderColor: C.border,
+    alignItems: "center",
+    backgroundColor: C.bgGold,
+  },
+  cardRowGreen: {
+    flexDirection: "row",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderBottomWidth: 0.5,
+    borderColor: C.border,
+    alignItems: "center",
+    backgroundColor: C.bgGreen,
+  },
+  cardEventRow: {
+    flexDirection: "row",
+    paddingHorizontal: 8,
     paddingVertical: 4,
     borderBottomWidth: 0.5,
     borderColor: C.border,
     alignItems: "center",
     backgroundColor: "#fdf8ec",
   },
-  eventOra:   { width: 26, color: C.gold, fontFamily: "Helvetica-Bold" },
-  eventLabel: { flex: 1, color: C.goldDark, fontFamily: "Helvetica-Bold" },
-  eventNote:  { fontSize: 6.5, color: C.muted },
-  // ── Golgheteri ──
-  scorerRow: {
-    flexDirection: "row",
-    paddingVertical: 2.5,
-    borderBottomWidth: 0.5,
-    borderColor: C.border,
-    alignItems: "center",
-  },
-  scorerRank:  { width: 16, textAlign: "center", color: C.muted },
-  scorerNo:    { width: 26, textAlign: "center" },
-  scorerEchipa:{ flex: 1, color: C.muted },
-  scorerGoluri:{ width: 28, textAlign: "center", fontFamily: "Helvetica-Bold", color: C.gold },
-  // ── Clasament Final ──
-  finalRow: {
-    flexDirection: "row",
-    paddingHorizontal: 5,
-    paddingVertical: 3,
-    borderBottomWidth: 0.5,
-    borderColor: C.border,
-    borderLeftWidth: 0.5,
-    borderRightWidth: 0.5,
-    alignItems: "center",
-  },
-  finalRowTop3: {
-    flexDirection: "row",
-    paddingHorizontal: 5,
-    paddingVertical: 3,
-    backgroundColor: C.bgGold,
-    borderBottomWidth: 0.5,
-    borderColor: C.border,
-    borderLeftWidth: 0.5,
-    borderRightWidth: 0.5,
-    alignItems: "center",
-  },
-  finalRank: { width: 22, textAlign: "center", color: C.muted, fontSize: 7 },
-  finalRankGold: { width: 22, textAlign: "center", fontFamily: "Helvetica-Bold", color: C.gold, fontSize: 9 },
-  finalNume: { flex: 1 },
-  finalNumeBold: { flex: 1, fontFamily: "Helvetica-Bold" },
-  finalNumeMuted: { flex: 1, color: C.muted },
+
+  // ── Celule meci (program) ──
+  mOra:    { width: 26, color: C.muted },
+  mTeren:  { width: 20, color: C.muted },
+  mBadge:  { width: 28, color: C.muted },
+  mEchipa: { flex: 1 },
+  mScore:  { width: 30, textAlign: "center", fontFamily: "Helvetica-Bold" },
+  mPen:    { width: 36, textAlign: "center", color: C.muted, fontSize: 6.5 },
+  mEventOra:   { width: 26, color: C.gold, fontFamily: "Helvetica-Bold" },
+  mEventLabel: { flex: 1, color: C.goldDark, fontFamily: "Helvetica-Bold" },
+
+  // ── Celule clasament grupe ──
+  cRank: { width: 12, textAlign: "center", color: C.muted, fontSize: 7 },
+  cNume: { flex: 1 },
+  cStat: { width: 16, textAlign: "center", color: C.muted, fontSize: 7 },
+  cPct:  { width: 18, textAlign: "center", fontFamily: "Helvetica-Bold", color: C.gold, fontSize: 7.5 },
+  grupaHeader: { fontSize: 7.5, fontFamily: "Helvetica-Bold", color: C.dark, marginBottom: 3 },
+
+  // ── Celule golgheteri ──
+  gRank:  { width: 16, textAlign: "center", color: C.muted },
+  gNo:    { width: 30, textAlign: "center" },
+  gEch:   { flex: 1, color: C.muted },
+  gGol:   { width: 28, textAlign: "center", fontFamily: "Helvetica-Bold", color: C.gold },
+
+  // ── Celule clasament final ──
+  fRank:     { width: 22, textAlign: "center", color: C.muted, fontSize: 7 },
+  fRankGold: { width: 22, textAlign: "center", fontFamily: "Helvetica-Bold", color: C.gold, fontSize: 9 },
+  fNume:     { flex: 1 },
+  fNumeBold: { flex: 1, fontFamily: "Helvetica-Bold" },
+  fNumeMuted:{ flex: 1, color: C.muted },
+
   // ── Footer ──
   footer: {
     position: "absolute",
@@ -277,10 +250,12 @@ export type PDFClassamentRow = {
 
 export type PDFMeciRow = {
   id:              string;
+  faza:            string;
   ziua:            string;
   ora:             string;
   teren:           string;
   grupa:           string | null;
+  cod:             string | null;
   echipaAcasaId:   string | null;
   echipaOaspeteId: string | null;
   echipaAcasa:     { nume: string } | null;
@@ -308,36 +283,24 @@ export type PDFEvenimentRow = {
   ora:   string;
 };
 
-export type PDFEliminatoriuRow = {
-  cod:            string | null;
-  jucat:          boolean;
-  scorAcasa:      number | null;
-  scorOaspete:    number | null;
-  penaltyAcasa:   number | null;
-  penaltyOaspete: number | null;
-  echipaAcasa:    { id: string; nume: string } | null;
-  echipaOaspete:  { id: string; nume: string } | null;
-};
-
 export type TurneuPDFProps = {
-  categorie:            { id: string; nume: string; anNastere: number };
-  clasamentA:           PDFClassamentRow[];
-  clasamentB:           PDFClassamentRow[];
-  meciuri:              PDFMeciRow[];
-  meciuriEliminatorii:  PDFEliminatoriuRow[];
-  golgheteri:           PDFGolgheterRow[];
-  echipaMap:            Record<string, string>;
-  evenimenteSpeciale:   PDFEvenimentRow[];
-  generatLa:            string;
+  categorie:          { id: string; nume: string; anNastere: number };
+  clasamentA:         PDFClassamentRow[];
+  clasamentB:         PDFClassamentRow[];
+  meciuri:            PDFMeciRow[];   // TOATE meciurile (grupa + eliminatorii)
+  golgheteri:         PDFGolgheterRow[];
+  echipaMap:          Record<string, string>;
+  evenimenteSpeciale: PDFEvenimentRow[];
+  generatLa:          string;
 };
 
-// ── Sub-componente PDF ────────────────────────────────────────
+// ── Helpers program ───────────────────────────────────────────
 
 const DAY_ORDER: Record<string, number> = {
   Vineri: 1, "Sâmbătă": 2, Sambata: 2, "Duminică": 3, Duminica: 3,
 };
 
-function grupaMeciuriPeZile(meciuri: PDFMeciRow[]) {
+function sortMeciuriPeZile(meciuri: PDFMeciRow[]) {
   const sorted = [...meciuri].sort((a, b) => {
     const dz = (DAY_ORDER[a.ziua] ?? 9) - (DAY_ORDER[b.ziua] ?? 9);
     return dz !== 0 ? dz : a.ora.localeCompare(b.ora);
@@ -356,54 +319,20 @@ function grupaEvenimentePeZile(events: PDFEvenimentRow[]) {
   return map;
 }
 
-function ClassamentTable({ titlu, clasament }: { titlu: string; clasament: PDFClassamentRow[] }) {
-  return (
-    <View style={s.col}>
-      <Text style={s.grupaHeader}>{titlu}</Text>
-
-      {/* Header: # | Echipa | M | V | E | I | GM | GP | GJ | P */}
-      <View style={s.tableHeader}>
-        <Text style={s.cRank}>#</Text>
-        <Text style={s.cNume}>Echipa</Text>
-        <Text style={s.cStat}>M</Text>
-        <Text style={s.cStat}>V</Text>
-        <Text style={s.cStat}>E</Text>
-        <Text style={s.cStat}>I</Text>
-        <Text style={s.cStat}>GM</Text>
-        <Text style={s.cStat}>GP</Text>
-        <Text style={s.cStat}>GJ</Text>
-        <Text style={s.cPct}>P</Text>
-      </View>
-
-      {clasament.map((e, idx) => {
-        const rank  = idx + 1;
-        const isTop = rank <= 2;
-        return (
-          <View key={e.echipaId} style={isTop ? s.tableRowGreen : s.tableRow}>
-            <Text style={[s.cRank, isTop ? { color: C.green, fontFamily: "Helvetica-Bold" } : {}]}>
-              {rank}
-            </Text>
-            <Text style={s.cNume}>{sd(e.nume)}</Text>
-            <Text style={s.cStat}>{e.pj}</Text>
-            <Text style={s.cStat}>{e.v}</Text>
-            <Text style={s.cStat}>{e.e}</Text>
-            <Text style={s.cStat}>{e.i}</Text>
-            <Text style={s.cStat}>{e.gd}</Text>
-            <Text style={s.cStat}>{e.gp}</Text>
-            <Text style={[s.cStat, { color: e.golaveraj >= 0 ? C.dark : C.red }]}>
-              {e.golaveraj >= 0 ? "+" : ""}{e.golaveraj}
-            </Text>
-            <Text style={s.cPct}>{e.puncte}</Text>
-          </View>
-        );
-      })}
-    </View>
-  );
+function badgeMeci(m: PDFMeciRow): string {
+  if (m.faza !== "eliminatorii") return `Gr.${m.grupa ?? "?"}`;
+  const c = m.cod ?? "";
+  if (c.startsWith("SF")) return c;
+  if (c === "F1")  return "Finala";
+  if (c === "B1")  return "Bronz";
+  if (c.startsWith("F")) return `Fin.${c.slice(1)}`;
+  if (c.startsWith("B")) return `Brnz.${c.slice(1)}`;
+  return c || "Elim.";
 }
 
 // ── Helpers clasament final ───────────────────────────────────
 
-function elimWinner(m: PDFEliminatoriuRow | undefined): string | null {
+function elimWinner(m: PDFMeciRow | undefined): string | null {
   if (!m?.jucat || m.scorAcasa == null || m.scorOaspete == null) return null;
   if (m.scorAcasa > m.scorOaspete)  return m.echipaAcasa?.nume  ?? null;
   if (m.scorOaspete > m.scorAcasa)  return m.echipaOaspete?.nume ?? null;
@@ -413,7 +342,7 @@ function elimWinner(m: PDFEliminatoriuRow | undefined): string | null {
   return null;
 }
 
-function elimLoser(m: PDFEliminatoriuRow | undefined): string | null {
+function elimLoser(m: PDFMeciRow | undefined): string | null {
   if (!m?.jucat || m.scorAcasa == null || m.scorOaspete == null) return null;
   if (m.scorAcasa < m.scorOaspete)  return m.echipaAcasa?.nume  ?? null;
   if (m.scorOaspete < m.scorAcasa)  return m.echipaOaspete?.nume ?? null;
@@ -424,7 +353,7 @@ function elimLoser(m: PDFEliminatoriuRow | undefined): string | null {
 }
 
 function calculeazaClasamentFinal(
-  eliminatorii: PDFEliminatoriuRow[],
+  eliminatorii: PDFMeciRow[],
   clasamentA: PDFClassamentRow[],
   clasamentB: PDFClassamentRow[],
 ): { place: number; team: string | null }[] {
@@ -459,6 +388,58 @@ function calculeazaClasamentFinal(
   return ranking;
 }
 
+// ── Sub-componente ────────────────────────────────────────────
+
+function ClassamentTable({ titlu, clasament }: { titlu: string; clasament: PDFClassamentRow[] }) {
+  return (
+    <View style={s.col}>
+      <Text style={s.grupaHeader}>{titlu}</Text>
+      {/* Header */}
+      <View style={[s.cardRow, { backgroundColor: C.bgGold, borderTopLeftRadius: 3, borderTopRightRadius: 3 }]}>
+        <Text style={s.cRank}>#</Text>
+        <Text style={s.cNume}>Echipa</Text>
+        <Text style={s.cStat}>M</Text>
+        <Text style={s.cStat}>V</Text>
+        <Text style={s.cStat}>E</Text>
+        <Text style={s.cStat}>I</Text>
+        <Text style={s.cStat}>GM</Text>
+        <Text style={s.cStat}>GP</Text>
+        <Text style={s.cStat}>GJ</Text>
+        <Text style={s.cPct}>P</Text>
+      </View>
+      {clasament.map((e, idx) => {
+        const rank  = idx + 1;
+        const isTop = rank <= 2;
+        const isLast = idx === clasament.length - 1;
+        return (
+          <View
+            key={e.echipaId}
+            style={[
+              isTop ? s.cardRowGreen : s.cardRow,
+              isLast ? { borderBottomWidth: 0 } : {},
+            ]}
+          >
+            <Text style={[s.cRank, isTop ? { color: C.green, fontFamily: "Helvetica-Bold" } : {}]}>
+              {rank}
+            </Text>
+            <Text style={s.cNume}>{sd(e.nume)}</Text>
+            <Text style={s.cStat}>{e.pj}</Text>
+            <Text style={s.cStat}>{e.v}</Text>
+            <Text style={s.cStat}>{e.e}</Text>
+            <Text style={s.cStat}>{e.i}</Text>
+            <Text style={s.cStat}>{e.gd}</Text>
+            <Text style={s.cStat}>{e.gp}</Text>
+            <Text style={[s.cStat, { color: e.golaveraj >= 0 ? C.dark : C.red }]}>
+              {e.golaveraj >= 0 ? "+" : ""}{e.golaveraj}
+            </Text>
+            <Text style={s.cPct}>{e.puncte}</Text>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
 // ── Documentul PDF principal ──────────────────────────────────
 
 export function TurneuPDF({
@@ -466,20 +447,23 @@ export function TurneuPDF({
   clasamentA,
   clasamentB,
   meciuri,
-  meciuriEliminatorii,
   golgheteri,
   echipaMap,
   evenimenteSpeciale,
   generatLa,
 }: TurneuPDFProps) {
-  const meciuriGrupa  = meciuri.filter((m) => m.ziua && m.grupa);
-  const peZile        = grupaMeciuriPeZile(meciuriGrupa);
-  const evPeZile      = grupaEvenimentePeZile(evenimenteSpeciale);
-  const top10         = golgheteri.slice(0, 10);
-  const clasamentFinal = calculeazaClasamentFinal(meciuriEliminatorii, clasamentA, clasamentB);
+  // Progam: toate meciurile (grupa + eliminatorii)
+  const peZile   = sortMeciuriPeZile(meciuri.filter((m) => m.ziua));
+  const evPeZile = grupaEvenimentePeZile(evenimenteSpeciale);
+  const top10    = golgheteri.slice(0, 10);
 
-  const jucate = meciuriGrupa.filter((m) => m.jucat).length;
-  const total  = meciuriGrupa.length;
+  // Contoare pentru subtitle
+  const jucate = meciuri.filter((m) => m.jucat).length;
+  const total  = meciuri.length;
+
+  // Clasament final din eliminatorii
+  const eliminatorii    = meciuri.filter((m) => m.faza === "eliminatorii");
+  const clasamentFinal  = calculeazaClasamentFinal(eliminatorii, clasamentA, clasamentB);
 
   const toateZilele = [...new Set([...Object.keys(peZile), ...Object.keys(evPeZile)])];
   const zile = toateZilele.sort((a, b) => (DAY_ORDER[a] ?? 9) - (DAY_ORDER[b] ?? 9));
@@ -511,7 +495,7 @@ export function TurneuPDF({
           <Text style={s.pageSubtitleRight}>{jucate}/{total} meciuri jucate</Text>
         </View>
 
-        {/* ── Program meciuri ────────────────────────────────── */}
+        {/* ── Program meciuri — carduri rotunjite pe zile ────── */}
         <Text style={s.sectionTitle}>Program meciuri</Text>
 
         {zile.map((ziua) => {
@@ -522,42 +506,57 @@ export function TurneuPDF({
           const slotsMeciuri: Slot[] = (peZile[ziua] ?? []).map((m) => ({ kind: "meci", data: m }));
           const slotsEv: Slot[] = (evPeZile[ziua] ?? []).map((e) => ({ kind: "eveniment", data: e }));
           const slots = [...slotsMeciuri, ...slotsEv].sort((a, b) => a.data.ora.localeCompare(b.data.ora));
+          const nrMeciuriZi = slotsMeciuri.length;
 
           return (
-            <View key={ziua}>
-              <Text style={s.dayHeader}>{sd(ziua)}</Text>
-              {slots.map((slot) => {
+            <View key={ziua} style={s.card}>
+              {/* Header zi */}
+              <View style={s.cardHead}>
+                <Text style={s.cardHeadText}>{sd(ziua).toUpperCase()}</Text>
+                <Text style={s.cardHeadSub}>{nrMeciuriZi} meciuri</Text>
+              </View>
+
+              {/* Randuri meciuri / evenimente */}
+              {slots.map((slot, si) => {
+                const isLast = si === slots.length - 1;
+
                 if (slot.kind === "eveniment") {
                   const ev = slot.data;
                   const icon = ev.tip === "festivitate_premiere" ? "★" : "●";
                   return (
-                    <View key={ev.id} style={s.eventRow}>
-                      <Text style={s.eventOra}>{ev.ora}</Text>
-                      <Text style={s.eventLabel}>{icon}  {sd(ev.titlu)}</Text>
+                    <View key={ev.id} style={[s.cardEventRow, isLast ? { borderBottomWidth: 0 } : {}]}>
+                      <Text style={s.mEventOra}>{ev.ora}</Text>
+                      <Text style={s.mEventLabel}>{icon}  {sd(ev.titlu)}</Text>
                     </View>
                   );
                 }
 
-                const m           = slot.data;
-                const jucat       = m.jucat && m.scorAcasa != null;
-                const hasPenalty  = jucat && m.penaltyAcasa != null && m.penaltyOaspete != null
-                                    && m.scorAcasa === m.scorOaspete;
+                const m          = slot.data;
+                const jucat      = m.jucat && m.scorAcasa != null;
+                const hasPenalty = jucat && m.penaltyAcasa != null && m.penaltyOaspete != null
+                                   && m.scorAcasa === m.scorOaspete;
                 const numeA = sd(m.echipaAcasa?.nume ?? "—");
                 const numeO = sd(m.echipaOaspete?.nume ?? "—");
+                const isElim = m.faza === "eliminatorii";
 
                 return (
-                  <View key={m.id} style={s.matchRow}>
-                    <Text style={s.matchOra}>{m.ora}</Text>
-                    <Text style={s.matchTeren}>{formatTeren(m.teren)}</Text>
-                    <Text style={s.matchGrupa}>Gr.{m.grupa}</Text>
-                    <Text style={[s.matchEchipa, jucat ? { fontFamily: "Helvetica-Bold" } : {}]}>{numeA}</Text>
-                    <Text style={[s.matchScore, { color: jucat ? C.dark : C.muted }]}>
-                      {jucat ? `${m.scorAcasa} – ${m.scorOaspete}` : "vs"}
+                  <View key={m.id} style={[
+                    isElim ? s.cardRowGold : s.cardRow,
+                    isLast ? { borderBottomWidth: 0 } : {},
+                  ]}>
+                    <Text style={s.mOra}>{m.ora}</Text>
+                    <Text style={s.mTeren}>{formatTeren(m.teren)}</Text>
+                    <Text style={[s.mBadge, isElim ? { color: C.gold, fontFamily: "Helvetica-Bold" } : {}]}>
+                      {badgeMeci(m)}
                     </Text>
-                    <Text style={[s.matchEchipa, { textAlign: "right" }, jucat ? { fontFamily: "Helvetica-Bold" } : {}]}>
+                    <Text style={[s.mEchipa, jucat ? { fontFamily: "Helvetica-Bold" } : {}]}>{numeA}</Text>
+                    <Text style={[s.mScore, { color: jucat ? C.dark : C.muted }]}>
+                      {jucat ? `${m.scorAcasa}–${m.scorOaspete}` : "vs"}
+                    </Text>
+                    <Text style={[s.mEchipa, { textAlign: "right" }, jucat ? { fontFamily: "Helvetica-Bold" } : {}]}>
                       {numeO}
                     </Text>
-                    <Text style={s.matchPen}>
+                    <Text style={s.mPen}>
                       {hasPenalty ? `pen. ${m.penaltyAcasa}–${m.penaltyOaspete}` : ""}
                     </Text>
                   </View>
@@ -567,61 +566,85 @@ export function TurneuPDF({
           );
         })}
 
-        <View style={s.dividerThin} />
+        <View style={s.divider} />
 
-        {/* ── Clasament grupă (inainte de Golgheteri) ───────── */}
+        {/* ── Clasament grupă ────────────────────────────────── */}
         <Text style={s.sectionTitle}>Clasament grupa</Text>
         <View style={s.row}>
           <ClassamentTable titlu="Grupa A" clasament={clasamentA} />
           <ClassamentTable titlu="Grupa B" clasament={clasamentB} />
         </View>
 
-        {/* ── Golgheteri ─────────────────────────────────────── */}
+        {/* ── Golgheteri — card rotunjit ─────────────────────── */}
         {top10.length > 0 && (
           <>
-            <View style={s.dividerThin} />
-            <Text style={s.sectionTitle}>Golgheteri (top {top10.length})</Text>
+            <View style={s.divider} />
+            <Text style={s.sectionTitle}>Golgheteri</Text>
 
-            <View style={[s.tableHeader, { marginBottom: 0 }]}>
-              <Text style={s.scorerRank}>#</Text>
-              <Text style={s.scorerNo}>Tricou</Text>
-              <Text style={s.scorerEchipa}>Echipa</Text>
-              <Text style={s.scorerGoluri}>Gol.</Text>
-            </View>
-
-            {top10.map((g, idx) => (
-              <View key={`${g.echipaId}-${g.numarTricou}`} style={s.scorerRow}>
-                <Text style={s.scorerRank}>{idx + 1}</Text>
-                <Text style={s.scorerNo}>Nr. {g.numarTricou}</Text>
-                <Text style={s.scorerEchipa}>{sd(echipaMap[g.echipaId] ?? "—")}</Text>
-                <Text style={s.scorerGoluri}>{g.goluri}</Text>
+            <View style={s.card}>
+              {/* Header */}
+              <View style={s.cardHead}>
+                <Text style={s.cardHeadText}>TOP {top10.length}</Text>
               </View>
-            ))}
+              {/* Coloana header */}
+              <View style={[s.cardRowGold]}>
+                <Text style={s.gRank}>#</Text>
+                <Text style={s.gNo}>Tricou</Text>
+                <Text style={s.gEch}>Echipa</Text>
+                <Text style={s.gGol}>Gol.</Text>
+              </View>
+              {/* Randuri */}
+              {top10.map((g, idx) => (
+                <View
+                  key={`${g.echipaId}-${g.numarTricou}`}
+                  style={[s.cardRow, idx === top10.length - 1 ? { borderBottomWidth: 0 } : {}]}
+                >
+                  <Text style={s.gRank}>{idx + 1}</Text>
+                  <Text style={s.gNo}>Nr. {g.numarTricou}</Text>
+                  <Text style={s.gEch}>{sd(echipaMap[g.echipaId] ?? "—")}</Text>
+                  <Text style={s.gGol}>{g.goluri}</Text>
+                </View>
+              ))}
+            </View>
           </>
         )}
 
-        {/* ── Clasament Final ────────────────────────────────── */}
+        {/* ── Clasament Final — card rotunjit ────────────────── */}
         {clasamentFinal.length > 0 && (
           <>
-            <View style={s.dividerThin} />
+            <View style={s.divider} />
             <Text style={s.sectionTitle}>Clasament Final</Text>
 
-            <View style={[s.tableHeader, { marginBottom: 0 }]}>
-              <Text style={s.finalRank}>Loc</Text>
-              <Text style={s.finalNume}>Echipa</Text>
+            <View style={s.card}>
+              {/* Header */}
+              <View style={s.cardHead}>
+                <Text style={s.cardHeadText}>CLASAMENT GENERAL</Text>
+              </View>
+              {/* Coloana header */}
+              <View style={s.cardRowGold}>
+                <Text style={s.fRank}>Loc</Text>
+                <Text style={s.fNume}>Echipa</Text>
+              </View>
+              {/* Randuri */}
+              {clasamentFinal.map(({ place, team }, idx) => {
+                const isTop3 = place <= 3;
+                const isLast = idx === clasamentFinal.length - 1;
+                return (
+                  <View
+                    key={place}
+                    style={[
+                      isTop3 ? s.cardRowGold : s.cardRow,
+                      isLast ? { borderBottomWidth: 0 } : {},
+                    ]}
+                  >
+                    <Text style={isTop3 ? s.fRankGold : s.fRank}>{place}</Text>
+                    <Text style={team ? (isTop3 ? s.fNumeBold : s.fNume) : s.fNumeMuted}>
+                      {team ? sd(team) : "—"}
+                    </Text>
+                  </View>
+                );
+              })}
             </View>
-
-            {clasamentFinal.map(({ place, team }) => {
-              const isTop3 = place <= 3;
-              return (
-                <View key={place} style={isTop3 ? s.finalRowTop3 : s.finalRow}>
-                  <Text style={isTop3 ? s.finalRankGold : s.finalRank}>{place}</Text>
-                  <Text style={team ? (isTop3 ? s.finalNumeBold : s.finalNume) : s.finalNumeMuted}>
-                    {team ? sd(team) : "—"}
-                  </Text>
-                </View>
-              );
-            })}
           </>
         )}
 
